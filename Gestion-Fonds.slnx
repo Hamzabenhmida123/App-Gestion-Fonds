@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="FondsSocial.Domain/FondsSocial.Domain.csproj" />
+  <Project Path="FondsSocial.Infrastructure/FondsSocial.Infrastructure.csproj" />
+  <Project Path="Gestion-Fonds/Gestion-Fonds.csproj" />
+</Solution>
