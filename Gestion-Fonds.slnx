@@ -1,4 +1,10 @@
 <Solution>
+  <Project Path="FondsSocial.Application.Tests/FondsSocial.Application.Tests.csproj">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
+  <Project Path="FondsSocial.Application/FondsSocial.Application.csproj">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
   <Project Path="FondsSocial.Domain/FondsSocial.Domain.csproj" />
   <Project Path="FondsSocial.Infrastructure/FondsSocial.Infrastructure.csproj" />
   <Project Path="Gestion-Fonds/Gestion-Fonds.csproj" />

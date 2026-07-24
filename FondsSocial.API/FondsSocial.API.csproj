@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+	<TargetFramework>net8.0</TargetFramework>
+	<Nullable>enable</Nullable>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<NoWarn>$(NoWarn);1591</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+	<ProjectReference Include="..\FondsSocial.Application\FondsSocial.Application.csproj" />
+	<ProjectReference Include="..\FondsSocial.Infrastructure\FondsSocial.Infrastructure.csproj" />
+	<ProjectReference Include="..\FondsSocial.Domain\FondsSocial.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+	<PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
+	<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+	<PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
+  </ItemGroup>
+
+</Project>
