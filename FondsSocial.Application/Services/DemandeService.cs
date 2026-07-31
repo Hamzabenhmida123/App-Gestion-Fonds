@@ -30,12 +30,24 @@ namespace FondsSocial.Application.Services
             var type = await _uow.TypeDePrets.GetByIdAsync(dto.TypeDePretId);
             if (type == null) throw new InvalidOperationException("Type de prêt introuvable");
 
-            // eligibility checks
+            // --- Eligibility checks (§5) ---
+
+            // 1) Ancienneté minimale : 1 an de titularisation
+            if (!agent.DateTitularisation.HasValue)
+                throw new InvalidOperationException("Date de titularisation non renseignée: ancienneté minimum d'un an requise.");
+            if (dto.DateDepot < agent.DateTitularisation.Value.AddYears(1))
+                throw new InvalidOperationException("Ancienneté minimale d'un an non respectée (date de titularisation requise).");
+
+            // 2) Plafond du type de prêt
             if (dto.MontantDemande > type.Plafond)
                 throw new InvalidOperationException($"Montant demandé ({dto.MontantDemande}) dépasse le plafond ({type.Plafond}) pour ce type de prêt.");
 
-            // franchise: vérifier la dernière demande de cet agent pour ce type
-            var previous = (await _uow.Demandes.FindAsync(d => d.AgentId == dto.AgentId && d.TypeDePretId == dto.TypeDePretId))
+            // 3) Franchise : attendre FranchiseMois entre deux demandes du même type.
+            //    Les demandes rejetées ou caduques ne comptent pas dans la franchise.
+            var previous = (await _uow.Demandes.FindAsync(d => d.AgentId == dto.AgentId
+                    && d.TypeDePretId == dto.TypeDePretId
+                    && d.StatutCourant != StatutDemande.Rejetee
+                    && d.StatutCourant != StatutDemande.Caduque))
                 .OrderByDescending(d => d.DateDepot)
                 .FirstOrDefault();
 
@@ -46,24 +58,64 @@ namespace FondsSocial.Application.Services
                     throw new InvalidOperationException($"Franchise non respectée: il faut attendre {type.FranchiseMois} mois depuis la dernière demande du même type.");
             }
 
+            // 4) Taux d'endettement ≤ 40 %
+            if (!agent.SalaireMensuel.HasValue || agent.SalaireMensuel.Value <= 0)
+                throw new InvalidOperationException("Salaire mensuel non renseigné: impossible de calculer le taux d'endettement.");
+            if (type.DureeMaxMois <= 0)
+                throw new InvalidOperationException("Durée maximale du prêt invalide: impossible d'estimer la mensualité.");
+
+            var retenuesEnCours = await _uow.RetenuesMensuelles.FindAsync(
+                r => r.AgentId == agent.Id && (r.Statut == StatutRetenue.Retenue || r.Statut == StatutRetenue.Prevue));
+            var mensualitesExistantes = retenuesEnCours.Sum(r => r.MontantARetenir);
+            var nouvelleMensualiteEstimee = dto.MontantDemande / type.DureeMaxMois;
+            var tauxEndettement = (mensualitesExistantes + nouvelleMensualiteEstimee) / agent.SalaireMensuel.Value;
+            if (tauxEndettement > 0.40m)
+                throw new InvalidOperationException($"Taux d'endettement ({tauxEndettement:P0}) supérieur au plafond de 40%.");
+
+            // 5) Plafond cumulé « logement » : 30 000 DT, tous types confondus
+            if (type.Categorie == CategorieBudget.Logement)
+            {
+                const decimal plafondCumuleLogement = 30000m;
+
+                var typesLogementIds = (await _uow.TypeDePrets.GetAllAsync())
+                    .Where(t => t.Categorie == CategorieBudget.Logement)
+                    .Select(t => t.Id)
+                    .ToHashSet();
+
+                var demandesLogement = (await _uow.Demandes.FindAsync(d => d.AgentId == agent.Id))
+                    .Where(d => typesLogementIds.Contains(d.TypeDePretId))
+                    .ToList();
+
+                var demandeMontantMap = demandesLogement.ToDictionary(d => d.Id, d => d.MontantDemande);
+                var idsDemandesLogement = demandesLogement.Select(d => d.Id).ToList();
+
+                var decisionsLogement = idsDemandesLogement.Count > 0
+                    ? await _uow.Decisions.FindAsync(dec => idsDemandesLogement.Contains(dec.DemandeId) && dec.SensDecision == SensDecision.Favorable)
+                    : new List<Decision>();
+
+                var totalEngage = decisionsLogement.Sum(dec => dec.MontantAccorde ?? (demandeMontantMap.TryGetValue(dec.DemandeId, out var m) ? m : 0m));
+                totalEngage += dto.MontantDemande;
+
+                if (totalEngage > plafondCumuleLogement)
+                    throw new InvalidOperationException($"Plafond cumulé logement dépassé: {totalEngage} DT engagés sur un maximum de {plafondCumuleLogement} DT.");
+            }
+
             var entity = _mapper.Map<Demande>(dto);
             entity.NumeroDossier = GenerateNumeroDossier();
             entity.StatutCourant = StatutDemande.Deposee;
-            entity.ScorePriorite = 0;
+            entity.ScorePriorite = CalculateScorePriorite(agent, dto.DateDepot);
 
-            await _uow.Demandes.AddAsync(entity);
-
-            // add initial historique
-            var hist = new HistoriqueStatutDemande
+            // Attach the initial history entry via the navigation collection
+            // so EF Core sets DemandeId automatically after the parent insert.
+            entity.HistoriqueStatuts.Add(new HistoriqueStatutDemande
             {
-                DemandeId = entity.Id,
                 Statut = StatutDemande.Deposee,
                 DateChangement = DateTime.UtcNow,
                 Auteur = "System",
                 Commentaire = "Demande déposée"
-            };
-            await _uow.HistoriqueStatutDemandes.AddAsync(hist);
+            });
 
+            await _uow.Demandes.AddAsync(entity);
             await _uow.SaveChangesAsync();
 
             return _mapper.Map<DemandeDto>(entity);
@@ -122,6 +174,55 @@ namespace FondsSocial.Application.Services
             return missing;
         }
 
+        public async Task<bool> CloturerDepotAsync(int demandeId, string auteur, string commentaire)
+        {
+            var demande = await _uow.Demandes.GetByIdAsync(demandeId);
+            if (demande == null) return false;
+
+            // Seules les demandes déposées peuvent être clôturées
+            if (demande.StatutCourant != StatutDemande.Deposee)
+                throw new InvalidOperationException($"Clôture impossible: la demande est au statut {demande.StatutCourant}.");
+
+            // Pièces requises pour le type de prêt
+            var requises = await _uow.PieceJustificativeRequises.FindAsync(r => r.TypeDePretId == demande.TypeDePretId);
+            var fournies = await _uow.PieceJustificatives.FindAsync(p => p.DemandeId == demandeId);
+
+            var manquantes = requises
+                .Where(r => r.Obligatoire)
+                .Select(r => r.LibellePiece)
+                .Except(fournies.Select(p => p.TypePiece))
+                .ToList();
+
+            if (manquantes.Count > 0)
+                throw new InvalidOperationException($"Dossier incomplet: pièces obligatoires manquantes: {string.Join(", ", manquantes)}.");
+
+            // Pièces fournies mais non conformes
+            var nonConformes = fournies
+                .Where(p => p.StatutVerification == StatutVerification.NonConforme)
+                .Select(p => p.TypePiece)
+                .ToList();
+
+            if (nonConformes.Count > 0)
+                throw new InvalidOperationException($"Dossier incomplet: pièces non conformes: {string.Join(", ", nonConformes)}.");
+
+            // Tout est complet et conforme → enregistrer la demande
+            demande.StatutCourant = StatutDemande.Enregistree;
+            _uow.Demandes.Update(demande);
+
+            var hist = new HistoriqueStatutDemande
+            {
+                DemandeId = demande.Id,
+                Statut = StatutDemande.Enregistree,
+                DateChangement = DateTime.UtcNow,
+                Auteur = auteur,
+                Commentaire = string.IsNullOrWhiteSpace(commentaire) ? "Dépôt clôturé: dossier complet" : commentaire
+            };
+            await _uow.HistoriqueStatutDemandes.AddAsync(hist);
+
+            await _uow.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> ChangePieceStatusAsync(int pieceId, StatutVerification statut, string auteur, string commentaire)
         {
             var piece = await _uow.PieceJustificatives.GetByIdAsync(pieceId);
@@ -164,6 +265,39 @@ namespace FondsSocial.Application.Services
             await _uow.HistoriqueStatutDemandes.AddAsync(hist);
             await _uow.SaveChangesAsync();
             return true;
+        }
+
+        /// <summary>
+        /// Calcule le score de priorité (§5) :
+        /// - 4 pts par année d'ancienneté (année complète),
+        /// - 4 pts si marié,
+        /// - 4 pts si divorcé/veuf avec enfants à charge (garde d'enfants),
+        /// - 2 pts par enfant à charge.
+        /// </summary>
+        private decimal CalculateScorePriorite(Agent agent, DateTime dateDepot)
+        {
+            decimal score = 0;
+
+            // 4 pts par année d'ancienneté complète
+            if (agent.DateTitularisation.HasValue)
+            {
+                var mois = (dateDepot.Year - agent.DateTitularisation.Value.Year) * 12 + dateDepot.Month - agent.DateTitularisation.Value.Month;
+                score += 4m * Math.Floor(mois / 12m);
+            }
+
+            // 4 pts si marié
+            if (agent.SituationFamiliale == SituationFamiliale.Marie)
+                score += 4m;
+
+            // 4 pts si divorcé/veuf avec enfants à charge (garde d'enfants)
+            if ((agent.SituationFamiliale == SituationFamiliale.Divorce || agent.SituationFamiliale == SituationFamiliale.Veuf)
+                && agent.NombreEnfantsACharge > 0)
+                score += 4m;
+
+            // 2 pts par enfant à charge
+            score += 2m * agent.NombreEnfantsACharge;
+
+            return score;
         }
 
         private bool IsValidTransition(StatutDemande current, StatutDemande target)

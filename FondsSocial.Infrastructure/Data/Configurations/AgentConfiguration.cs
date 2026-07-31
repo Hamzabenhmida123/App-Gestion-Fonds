@@ -20,6 +20,7 @@ namespace FondsSocial.Infrastructure.Data.Configurations
             builder.HasIndex(a => a.IdentifiantUnique).IsUnique().HasDatabaseName("IX_Agent_IdentifiantUnique");
             builder.Property(a => a.Adresse).HasMaxLength(500);
             builder.Property(a => a.Telephone).HasMaxLength(20);
+            builder.Property(a => a.SalaireMensuel).HasColumnType("decimal(18,3)");
 
             builder.HasOne(a => a.Societe).WithMany(s => s.Agents).HasForeignKey(a => a.SocieteId).OnDelete(DeleteBehavior.Restrict);
         }

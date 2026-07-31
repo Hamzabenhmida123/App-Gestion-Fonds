@@ -105,6 +105,28 @@ namespace FondsSocial.API.Controllers
             if (!ok) return BadRequest(new { error = "Transition interdite ou demande introuvable" });
             return NoContent();
         }
+
+        /// <summary>Clôturer le dépôt : vérifie la complétude et la conformité des pièces, puis enregistre la demande</summary>
+        [HttpPost("{id}/cloturer-depot")]
+        public async Task<IActionResult> CloturerDepot(int id, [FromBody] CloturerDepotRequest req)
+        {
+            try
+            {
+                var ok = await _service.CloturerDepotAsync(id, req.Auteur, req.Commentaire ?? string.Empty);
+                if (!ok) return NotFound();
+                return NoContent();
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { error = ex.Message });
+            }
+        }
+    }
+
+    public class CloturerDepotRequest
+    {
+        public string Auteur { get; set; } = null!;
+        public string? Commentaire { get; set; }
     }
 
     public class ChangePieceStatusRequest

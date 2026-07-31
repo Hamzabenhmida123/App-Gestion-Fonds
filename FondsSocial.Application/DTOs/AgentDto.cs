@@ -14,6 +14,7 @@ namespace FondsSocial.Application.DTOs
         public string? Telephone { get; set; }
         public DateTime? DateTitularisation { get; set; }
         public int NombreEnfantsACharge { get; set; }
+        public decimal? SalaireMensuel { get; set; }
         public int SocieteId { get; set; }
     }
 }

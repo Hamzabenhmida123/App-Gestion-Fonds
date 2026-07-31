@@ -1,0 +1,708 @@
+================================================================================
+GESTION-FONDS — MOCKS SWAGGER / POSTMAN (prêts à copier-coller)
+================================================================================
+
+BASE URL (dev) :
+  http://localhost:5201          (HTTP)
+  https://localhost:7201         (HTTPS)
+
+Swagger UI : http://localhost:5201/swagger
+
+Fichiers à déposer (multipart/form-data) dans Swagger :
+  POST /api/Demande/{id}/pieces
+    - Champ "file"     : sélection du fichier
+    - Champ "typePiece": texte libre (ex: CIN)
+
+================================================================================
+RÉFÉRENCE DES ENUMS (valeurs numériques à utiliser dans le JSON)
+================================================================================
+SituationFamiliale      : 0=Celibataire, 1=Marie, 2=Divorce, 3=Veuf
+CategorieBudget         : 0=Logement, 1=Vehicule, 2=Autre
+ModeCalculFraisGestion  : 0=PourcentageConstant, 1=PourcentageDegressif, 2=MontantFixe
+StatutDemande           : 0=Deposee, 1=Enregistree, 2=AEtude, 3=PVVise, 4=Signee,
+                          5=DecisionNotifiee, 6=RetenueProgrammee, 7=DecaisseeCloturee,
+                          8=Ajournee, 9=Rejetee, 10=Caduque
+StatutVerification      : 0=EnAttente, 1=Conforme, 2=NonConforme
+StatutVisaSignature     : 0=EnPreparation, 1=EnAttenteVisa, 2=ViseParTousLesMembres, 3=SigneParDG
+SensDecision            : 0=Favorable, 1=Defavorable, 2=Ajourne
+StatutRetenue           : 0=Prevue, 1=Retenue, 2=Anomalie, 3=Annulee
+StatutEcheance          : 0=APayer, 1=Payee, 2=Impayee, 3=Suspendue
+
+================================================================================
+SOCIETE  (POST /api/Societe)
+================================================================================
+POST http://localhost:5201/api/Societe
+Content-Type: application/json
+
+{
+  "code": "SOC001",
+  "raisonSociale": "Société Test SARL",
+  "referentielReglesGestion": null
+}
+
+GET    http://localhost:5201/api/Societe
+GET    http://localhost:5201/api/Societe/{id}           (ex: /api/Societe/1)
+PUT    http://localhost:5201/api/Societe/{id}
+Content-Type: application/json
+
+{
+  "code": "SOC001",
+  "raisonSociale": "Société Test SARL (modifiée)",
+  "referentielReglesGestion": "Regles v1"
+}
+
+DELETE http://localhost:5201/api/Societe/{id}
+
+================================================================================
+TYPE DE PRET  (POST /api/TypeDePret)
+================================================================================
+POST http://localhost:5201/api/TypeDePret
+Content-Type: application/json
+
+{
+  "code": "PRET_LOG",
+  "libelle": "Prêt Logement",
+  "categorie": 0,
+  "plafond": 50000,
+  "dureeMaxMois": 120,
+  "franchiseMois": 12,
+  "modeCalculFraisGestion": 0,
+  "tauxOuMontantFraisGestion": 2,
+  "actif": true
+}
+
+Autre exemple (Véhicule) :
+{
+  "code": "PRET_VEH",
+  "libelle": "Prêt Véhicule",
+  "categorie": 1,
+  "plafond": 30000,
+  "dureeMaxMois": 60,
+  "franchiseMois": 6,
+  "modeCalculFraisGestion": 1,
+  "tauxOuMontantFraisGestion": 1.5,
+  "actif": true
+}
+
+GET    http://localhost:5201/api/TypeDePret
+GET    http://localhost:5201/api/TypeDePret/{id}
+PUT    http://localhost:5201/api/TypeDePret/{id}
+Content-Type: application/json
+
+{
+  "code": "PRET_LOG",
+  "libelle": "Prêt Logement (modifié)",
+  "categorie": 0,
+  "plafond": 60000,
+  "dureeMaxMois": 180,
+  "franchiseMois": 12,
+  "modeCalculFraisGestion": 0,
+  "tauxOuMontantFraisGestion": 2.5,
+  "actif": true
+}
+
+DELETE http://localhost:5201/api/TypeDePret/{id}
+
+================================================================================
+AGENT  (POST /api/Agent)
+================================================================================
+POST http://localhost:5201/api/Agent
+Content-Type: application/json
+
+{
+  "matricule": "AG-TEST-001",
+  "nom": "Ben",
+  "prenom": "Hamza",
+  "cin": "12345678",
+  "identifiantUnique": "ID-AG-001",
+  "grade": "Cadre",
+  "fonction": "Ingénieur",
+  "adresse": "Tunis",
+  "telephone": "20123456",
+  "dateTitularisation": "2020-01-15T00:00:00",
+  "situationFamiliale": 1,
+  "nombreEnfantsACharge": 2,
+  "salaireMensuel": 3000,
+  "societeId": 1
+}
+
+IMPORTANT : matricule, cin et identifiantUnique sont UNIQUES en base.
+            Changez ces valeurs à chaque nouveau test (AG-TEST-002, 87654321, ID-AG-002...).
+            situationFamiliale utilise les valeurs ci-dessus (0=Célibataire, 1=Marié...).
+
+GET    http://localhost:5201/api/Agent
+GET    http://localhost:5201/api/Agent/{id}
+PUT    http://localhost:5201/api/Agent/{id}
+Content-Type: application/json
+
+{
+  "matricule": "AG-TEST-001",
+  "nom": "Ben",
+  "prenom": "Hamza",
+  "cin": "12345678",
+  "identifiantUnique": "ID-AG-001",
+  "grade": "Cadre",
+  "fonction": "Chef de projet",
+  "adresse": "Tunis",
+  "telephone": "20123456",
+  "dateTitularisation": "2020-01-15T00:00:00",
+  "situationFamiliale": 1,
+  "nombreEnfantsACharge": 3,
+  "salaireMensuel": 3500,
+  "societeId": 1
+}
+
+DELETE http://localhost:5201/api/Agent/{id}
+
+================================================================================
+PIECE JUSTIFICATIVE REQUISE  (POST /api/PieceJustificativeRequise)
+================================================================================
+POST http://localhost:5201/api/PieceJustificativeRequise
+Content-Type: application/json
+
+{
+  "typeDePretId": 1,
+  "libellePiece": "CIN",
+  "obligatoire": true
+}
+
+Autre exemple :
+{
+  "typeDePretId": 1,
+  "libellePiece": "Bulletin de salaire",
+  "obligatoire": true
+}
+
+{
+  "typeDePretId": 1,
+  "libellePiece": "Attestation employeur",
+  "obligatoire": false
+}
+
+GET    http://localhost:5201/api/PieceJustificativeRequise
+GET    http://localhost:5201/api/PieceJustificativeRequise/{id}
+PUT    http://localhost:5201/api/PieceJustificativeRequise/{id}
+Content-Type: application/json
+
+{
+  "typeDePretId": 1,
+  "libellePiece": "CIN",
+  "obligatoire": true
+}
+
+DELETE http://localhost:5201/api/PieceJustificativeRequise/{id}
+
+================================================================================
+DEMANDE  (POST /api/Demande)
+================================================================================
+POST http://localhost:5201/api/Demande
+Content-Type: application/json
+
+{
+  "agentId": 1,
+  "typeDePretId": 1,
+  "dateDepot": "2026-08-01T10:00:00",
+  "montantDemande": 20000
+}
+
+(Le NumeroDossier est généré automatiquement côté serveur : D-AAAAMMJJ-XXXXXXXX)
+
+RÈGLES D'ÉLIGIBILITÉ qui peuvent bloquer (réponse 400) :
+  - agentId inexistant / typeDePretId inexistant
+  - agent titularisé depuis moins d'un an          -> "Ancienneté minimale d'un an non respectée"
+  - montantDemande > plafond du type de prêt       -> "dépasse le plafond"
+  - franchise non respectée (même type < FranchiseMois)
+  - salaireMensuel absent ou nul                     -> "Salaire mensuel non renseigné"
+  - taux d'endettement > 40%
+    (mensualités existantes + montant/dureeMaxMois) / salaireMensuel
+  - catégorie Logement : cumul des montants accordés
+    (décisions favorables + demande courante) > 30 000 DT
+
+GET  http://localhost:5201/api/Demande
+GET  http://localhost:5201/api/Demande?agentId=1&statut=0&typeDePretId=1&from=2026-01-01&to=2026-12-31
+GET  http://localhost:5201/api/Demande/{id}
+
+POST http://localhost:5201/api/Demande/{id}/pieces
+Content-Type: multipart/form-data
+  file      = (choisir un fichier, ex. cin.pdf)
+  typePiece = "CIN"
+
+POST http://localhost:5201/api/Demande/pieces/{pieceId}/status
+Content-Type: application/json
+
+{
+  "statutVerification": 1,
+  "auteur": "RH",
+  "commentaire": "Pièce conforme"
+}
+(statutVerification : 0=EnAttente, 1=Conforme, 2=NonConforme)
+
+POST http://localhost:5201/api/Demande/{id}/cloturer-depot
+Content-Type: application/json
+
+{
+  "auteur": "RH",
+  "commentaire": "Dossier complet"
+}
+Résultats : 204 si OK, 400 si pièces obligatoires manquantes ou non conformes.
+
+POST http://localhost:5201/api/Demande/{id}/transition
+Content-Type: application/json
+
+{
+  "newStatut": 2,
+  "auteur": "RH",
+  "commentaire": "Transmission au comité"
+}
+(newStatut : voir enums StatutDemande. Transitions autorisées :
+  Deposee(0)      -> Enregistree(1), AEtude(2), Rejetee(9)
+  Enregistree(1)  -> AEtude(2), Rejetee(9)
+  AEtude(2)       -> PVVise(3), Ajournee(8), Rejetee(9)
+  PVVise(3)       -> Signee(4), Rejetee(9)
+  Signee(4)       -> DecisionNotifiee(5)
+  DecisionNotifiee(5) -> RetenueProgrammee(6), DecaisseeCloturee(7))
+
+================================================================================
+MEMBRE COMITE  (POST /api/MembreComite)
+================================================================================
+POST http://localhost:5201/api/MembreComite
+Content-Type: application/json
+
+{
+  "nom": "Trabelsi",
+  "prenom": "Sami",
+  "fonction": "Président",
+  "actif": true
+}
+
+GET    http://localhost:5201/api/MembreComite
+GET    http://localhost:5201/api/MembreComite/{id}
+PUT    http://localhost:5201/api/MembreComite/{id}
+Content-Type: application/json
+
+{
+  "nom": "Trabelsi",
+  "prenom": "Sami",
+  "fonction": "Président du comité",
+  "actif": true
+}
+
+DELETE http://localhost:5201/api/MembreComite/{id}
+
+================================================================================
+SEANCE COMITE  (POST /api/SeanceComite)
+================================================================================
+POST http://localhost:5201/api/SeanceComite
+Content-Type: application/json
+
+{
+  "date": "2026-08-10T09:00:00",
+  "procesVerbal": "PV de la séance du 10/08",
+  "statutVisaSignature": 0
+}
+(statutVisaSignature : 0=EnPreparation, 1=EnAttenteVisa, 2=ViseParTousLesMembres, 3=SigneParDG)
+
+GET    http://localhost:5201/api/SeanceComite
+GET    http://localhost:5201/api/SeanceComite/{id}
+PUT    http://localhost:5201/api/SeanceComite/{id}
+Content-Type: application/json
+
+{
+  "date": "2026-08-10T09:00:00",
+  "procesVerbal": "PV de la séance du 10/08 (mis à jour)",
+  "statutVisaSignature": 2
+}
+
+DELETE http://localhost:5201/api/SeanceComite/{id}
+
+================================================================================
+PARTICIPATION SEANCE  (POST /api/ParticipationSeance)
+================================================================================
+POST http://localhost:5201/api/ParticipationSeance
+Content-Type: application/json
+
+{
+  "seanceComiteId": 1,
+  "membreComiteId": 1,
+  "aVise": true,
+  "dateVisa": "2026-08-11T10:00:00"
+}
+
+GET    http://localhost:5201/api/ParticipationSeance
+GET    http://localhost:5201/api/ParticipationSeance/{id}
+PUT    http://localhost:5201/api/ParticipationSeance/{id}
+Content-Type: application/json
+
+{
+  "seanceComiteId": 1,
+  "membreComiteId": 1,
+  "aVise": true,
+  "dateVisa": "2026-08-11T10:30:00"
+}
+
+DELETE http://localhost:5201/api/ParticipationSeance/{id}
+
+================================================================================
+DECISION  (POST /api/Decision)
+================================================================================
+POST http://localhost:5201/api/Decision
+Content-Type: application/json
+
+{
+  "demandeId": 1,
+  "seanceComiteId": 1,
+  "sensDecision": 0,
+  "montantAccorde": 20000,
+  "dateNotification": null,
+  "datePeremption": null
+}
+(sensDecision : 0=Favorable, 1=Defavorable, 2=Ajourne)
+
+GET    http://localhost:5201/api/Decision
+GET    http://localhost:5201/api/Decision/{id}
+PUT    http://localhost:5201/api/Decision/{id}
+Content-Type: application/json
+
+{
+  "demandeId": 1,
+  "seanceComiteId": 1,
+  "sensDecision": 0,
+  "montantAccorde": 20000,
+  "dateNotification": "2026-08-12T09:00:00",
+  "datePeremption": "2026-11-12T00:00:00"
+}
+
+DELETE http://localhost:5201/api/Decision/{id}
+
+================================================================================
+CONTRAT  (POST /api/Contrat)
+================================================================================
+POST http://localhost:5201/api/Contrat
+Content-Type: application/json
+
+{
+  "decisionId": 1,
+  "dateSignature": "2026-08-20T00:00:00",
+  "montantPrincipal": 20000,
+  "fraisGestion": 400,
+  "montantTotal": 20400,
+  "dureeMois": 120,
+  "datePremiereEcheance": "2026-09-30T00:00:00"
+}
+
+GET    http://localhost:5201/api/Contrat
+GET    http://localhost:5201/api/Contrat/{id}
+PUT    http://localhost:5201/api/Contrat/{id}
+Content-Type: application/json
+
+{
+  "decisionId": 1,
+  "dateSignature": "2026-08-20T00:00:00",
+  "montantPrincipal": 20000,
+  "fraisGestion": 400,
+  "montantTotal": 20400,
+  "dureeMois": 120,
+  "datePremiereEcheance": "2026-09-30T00:00:00"
+}
+
+DELETE http://localhost:5201/api/Contrat/{id}
+
+================================================================================
+GARANTIE  (POST /api/Garantie)
+================================================================================
+POST http://localhost:5201/api/Garantie
+Content-Type: application/json
+
+{
+  "contratId": 1,
+  "assuranceVieSouscrite": true,
+  "dateAssuranceVie": "2026-08-21T00:00:00",
+  "referencePoliceAssurance": "POL-123456",
+  "traiteSigneeLegalisee": true,
+  "dateTraite": "2026-08-21T00:00:00",
+  "engagementRemboursementSigne": true,
+  "dateEngagement": "2026-08-21T00:00:00",
+  "autorisationRetenueSalaireSignee": true,
+  "dateAutorisationRetenue": "2026-08-21T00:00:00"
+}
+
+GET    http://localhost:5201/api/Garantie
+GET    http://localhost:5201/api/Garantie/{id}
+PUT    http://localhost:5201/api/Garantie/{id}    (même corps que POST)
+DELETE http://localhost:5201/api/Garantie/{id}
+
+================================================================================
+ECHEANCE  (POST /api/Echeance)
+================================================================================
+POST http://localhost:5201/api/Echeance
+Content-Type: application/json
+
+{
+  "contratId": 1,
+  "numeroEcheance": 1,
+  "date": "2026-09-30T00:00:00",
+  "capitalRestantDu": 20000,
+  "mensualite": 188.89,
+  "capitalAmorti": 166.67,
+  "fraisGestion": 22.22,
+  "soldeRestant": 19833.33,
+  "statut": 0
+}
+(statut : 0=APayer, 1=Payee, 2=Impayee, 3=Suspendue)
+
+GET    http://localhost:5201/api/Echeance
+GET    http://localhost:5201/api/Echeance/{id}
+PUT    http://localhost:5201/api/Echeance/{id}
+Content-Type: application/json
+
+{
+  "contratId": 1,
+  "numeroEcheance": 1,
+  "date": "2026-09-30T00:00:00",
+  "capitalRestantDu": 20000,
+  "mensualite": 188.89,
+  "capitalAmorti": 166.67,
+  "fraisGestion": 22.22,
+  "soldeRestant": 19833.33,
+  "statut": 1
+}
+
+DELETE http://localhost:5201/api/Echeance/{id}
+
+================================================================================
+RETENUE MENSUELLE  (POST /api/RetenueMensuelle)
+================================================================================
+POST http://localhost:5201/api/RetenueMensuelle
+Content-Type: application/json
+
+{
+  "mois": "2026-09-01T00:00:00",
+  "agentId": 1,
+  "contratId": 1,
+  "montantARetenir": 188.89,
+  "montantEffectivementRetenu": null,
+  "statut": 0,
+  "referencePaie": null
+}
+(statut : 0=Prevue, 1=Retenue, 2=Anomalie, 3=Annulee)
+
+GET    http://localhost:5201/api/RetenueMensuelle
+GET    http://localhost:5201/api/RetenueMensuelle/{id}
+PUT    http://localhost:5201/api/RetenueMensuelle/{id}
+Content-Type: application/json
+
+{
+  "mois": "2026-09-01T00:00:00",
+  "agentId": 1,
+  "contratId": 1,
+  "montantARetenir": 188.89,
+  "montantEffectivementRetenu": 188.89,
+  "statut": 1,
+  "referencePaie": "PAIE-2026-09"
+}
+
+DELETE http://localhost:5201/api/RetenueMensuelle/{id}
+
+================================================================================
+BUDGET FONDS  (POST /api/BudgetFonds)
+================================================================================
+POST http://localhost:5201/api/BudgetFonds
+Content-Type: application/json
+
+{
+  "societeId": 1,
+  "exercice": 2026,
+  "categorie": 0,
+  "ressources": 100000,
+  "emplois": 60000,
+  "solde": 40000
+}
+(categorie : 0=Logement, 1=Vehicule, 2=Autre)
+ATTENTION : l'index (SocieteId, Exercice, Categorie) est UNIQUE.
+
+GET    http://localhost:5201/api/BudgetFonds
+GET    http://localhost:5201/api/BudgetFonds/{id}
+PUT    http://localhost:5201/api/BudgetFonds/{id}
+Content-Type: application/json
+
+{
+  "societeId": 1,
+  "exercice": 2026,
+  "categorie": 0,
+  "ressources": 120000,
+  "emplois": 70000,
+  "solde": 50000
+}
+
+DELETE http://localhost:5201/api/BudgetFonds/{id}
+
+================================================================================
+HISTORIQUE STATUT DEMANDE  (POST /api/HistoriqueStatutDemande)
+================================================================================
+POST http://localhost:5201/api/HistoriqueStatutDemande
+Content-Type: application/json
+
+{
+  "demandeId": 1,
+  "statut": 1,
+  "dateChangement": "2026-08-01T11:00:00",
+  "auteur": "RH",
+  "commentaire": "Demande enregistrée"
+}
+(souvent créé automatiquement par le service Demande — inutile de le faire à la main)
+
+GET    http://localhost:5201/api/HistoriqueStatutDemande
+GET    http://localhost:5201/api/HistoriqueStatutDemande/{id}
+PUT    http://localhost:5201/api/HistoriqueStatutDemande/{id}
+DELETE http://localhost:5201/api/HistoriqueStatutDemande/{id}
+
+================================================================================
+PIECE JUSTIFICATIVE (directe)  (POST /api/PieceJustificative)
+================================================================================
+POST http://localhost:5201/api/PieceJustificative
+Content-Type: application/json
+
+{
+  "demandeId": 1,
+  "typePiece": "CIN",
+  "cheminFichier": "/uploads/example.pdf",
+  "dateDepot": "2026-08-01T12:00:00",
+  "statutVerification": 0
+}
+(statutVerification : 0=EnAttente, 1=Conforme, 2=NonConforme)
+(Pour un vrai upload avec fichier, utilisez POST /api/Demande/{id}/pieces en multipart)
+
+GET    http://localhost:5201/api/PieceJustificative
+GET    http://localhost:5201/api/PieceJustificative/{id}
+PUT    http://localhost:5201/api/PieceJustificative/{id}
+DELETE http://localhost:5201/api/PieceJustificative/{id}
+
+================================================================================
+SCÉNARIO COMPLET DE TEST (ordre recommandé, à copier-coller)
+================================================================================
+ÉTAPE 1 — Société
+  POST /api/Societe
+  { "code": "SOC001", "raisonSociale": "Société Test SARL", "referentielReglesGestion": null }
+  -> notez l'id retourné (ex: 1)
+
+ÉTAPE 2 — Type de prêt (Logement)
+  POST /api/TypeDePret
+  { "code": "PRET_LOG", "libelle": "Prêt Logement", "categorie": 0, "plafond": 50000,
+    "dureeMaxMois": 120, "franchiseMois": 12, "modeCalculFraisGestion": 0,
+    "tauxOuMontantFraisGestion": 2, "actif": true }
+  -> notez l'id (ex: 1)
+
+ÉTAPE 3 — Pièces requises pour ce type
+  POST /api/PieceJustificativeRequise
+  { "typeDePretId": 1, "libellePiece": "CIN", "obligatoire": true }
+  { "typeDePretId": 1, "libellePiece": "Bulletin de salaire", "obligatoire": true }
+
+ÉTAPE 4 — Agent éligible
+  POST /api/Agent
+  { "matricule": "AG-TEST-001", "nom": "Ben", "prenom": "Hamza", "cin": "12345678",
+    "identifiantUnique": "ID-AG-001", "grade": "Cadre", "fonction": "Ingénieur",
+    "adresse": "Tunis", "telephone": "20123456",
+    "dateTitularisation": "2020-01-15T00:00:00", "situationFamiliale": 1,
+    "nombreEnfantsACharge": 2, "salaireMensuel": 3000, "societeId": 1 }
+
+ÉTAPE 5 — Demande
+  POST /api/Demande
+  { "agentId": 1, "typeDePretId": 1, "dateDepot": "2026-08-01T10:00:00", "montantDemande": 20000 }
+  -> notez l'id (ex: 1)
+
+ÉTAPE 6 — Déposer les pièces (multipart) x2
+  POST /api/Demande/1/pieces   (file=CIN.pdf, typePiece="CIN")
+  POST /api/Demande/1/pieces   (file=bulletin.pdf, typePiece="Bulletin de salaire")
+
+ÉTAPE 7 — Marquer les pièces conformes
+  POST /api/Demande/pieces/{idPiece1}/status
+  { "statutVerification": 1, "auteur": "RH", "commentaire": "ok" }
+
+ÉTAPE 8 — Clôturer le dépôt
+  POST /api/Demande/1/cloturer-depot
+  { "auteur": "RH", "commentaire": "Dossier complet" }
+  -> 204
+
+ÉTAPE 9 — Transition de statut
+  POST /api/Demande/1/transition
+  { "newStatut": 2, "auteur": "RH", "commentaire": "Transmission au comité" }
+  -> 204
+
+ÉTAPE 10 — Comité
+  POST /api/MembreComite
+  { "nom": "Trabelsi", "prenom": "Sami", "fonction": "Président", "actif": true }
+
+  POST /api/SeanceComite
+  { "date": "2026-08-10T09:00:00", "procesVerbal": "PV séance", "statutVisaSignature": 0 }
+
+  POST /api/ParticipationSeance
+  { "seanceComiteId": 1, "membreComiteId": 1, "aVise": true, "dateVisa": "2026-08-11T10:00:00" }
+
+  POST /api/Decision
+  { "demandeId": 1, "seanceComiteId": 1, "sensDecision": 0, "montantAccorde": 20000,
+    "dateNotification": null, "datePeremption": null }
+
+ÉTAPE 11 — Contrat
+  POST /api/Contrat
+  { "decisionId": 1, "dateSignature": "2026-08-20T00:00:00", "montantPrincipal": 20000,
+    "fraisGestion": 400, "montantTotal": 20400, "dureeMois": 120,
+    "datePremiereEcheance": "2026-09-30T00:00:00" }
+
+ÉTAPE 12 — Échéances & retenues
+  POST /api/Echeance
+  { "contratId": 1, "numeroEcheance": 1, "date": "2026-09-30T00:00:00",
+    "capitalRestantDu": 20000, "mensualite": 188.89, "capitalAmorti": 166.67,
+    "fraisGestion": 22.22, "soldeRestant": 19833.33, "statut": 0 }
+
+  POST /api/RetenueMensuelle
+  { "mois": "2026-09-01T00:00:00", "agentId": 1, "contratId": 1,
+    "montantARetenir": 188.89, "montantEffectivementRetenu": null,
+    "statut": 0, "referencePaie": null }
+
+================================================================================
+TESTS DES RÈGLES D'ÉLIGIBILITÉ (réponses 400 attendues)
+================================================================================
+A) Plafond dépassé
+   POST /api/Demande
+   { "agentId": 1, "typeDePretId": 1, "dateDepot": "2026-08-01T10:00:00", "montantDemande": 999999 }
+   -> 400 "Montant demandé ... dépasse le plafond ..."
+
+B) Franchise non respectée (2e demande même type < 12 mois)
+   POST /api/Demande
+   { "agentId": 1, "typeDePretId": 1, "dateDepot": "2026-08-01T10:00:00", "montantDemande": 5000 }
+   -> 400 "Franchise non respectée: il faut attendre 12 mois..."
+
+C) Ancienneté < 1 an
+   Créer un agent avec dateTitularisation = "2026-01-01T00:00:00" puis POST /api/Demande
+   -> 400 "Ancienneté minimale d'un an non respectée"
+
+D) Taux d'endettement > 40%
+   Créer un agent avec salaireMensuel = 500 et une demande de 10000 sur 12 mois
+   (mensualité ≈ 833 → 833/500 = 167% > 40%)
+   -> 400 "Taux d'endettement ... supérieur au plafond de 40%"
+
+E) Plafond cumulé logement 30 000 DT
+   Demande 1 accordée 25000 + nouvelle demande de 10000 (logement)
+   -> 400 "Plafond cumulé logement dépassé"
+
+F) Dossier incomplet
+   POST /api/Demande/1/cloturer-depot sans avoir déposé les pièces
+   -> 400 "Dossier incomplet: pièces obligatoires manquantes: CIN, Bulletin de salaire"
+
+================================================================================
+ERREURS COURANTES ET ASTUCES
+================================================================================
+- 400 ValidationProblemDetails : un champ obligatoire manque ou est invalide
+  (ex: on a formé la clé "cin" au lieu de "cin" ou envoyé une valeur nulle).
+- 500 SqlException "clé en double IX_Agent_Matricule / CIN / IdentifiantUnique" :
+  ces champs sont UNIQUES. Changez de valeurs à chaque test.
+- 500 SqlException "clé en double IX_Societe_Code / IX_TypeDePret_Code" :
+  même règle pour les codes.
+- Pour POST /api/Agent en Swagger : utilisez "application/json" et le corps exact
+  (ne pas envoyer le gabarit avec "string", "integer"...).
+- Les contrôleurs BudgetFonds, Contrat, Decision, Echeance, Garantie,
+  HistoriqueStatutDemande, MembreComite, ParticipationSeance, PieceJustificative,
+  RetenueMensuelle, SeanceComite attendent les ENTITÉS directement (pas de DTO) :
+  n'incluez PAS les champs calculés (Id, CreatedAt, UpdatedAt, IsDeleted...).
+  Seul le champ "societe" ou "demande" (navigation) ne doit PAS être envoyé.
+================================================================================

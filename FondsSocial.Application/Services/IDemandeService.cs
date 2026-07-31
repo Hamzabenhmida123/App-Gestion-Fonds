@@ -14,5 +14,12 @@ namespace FondsSocial.Application.Services
         Task<IEnumerable<string>> AddPieceRecordAsync(CreatePieceJustificativeDto dto);
         Task<bool> ChangePieceStatusAsync(int pieceId, StatutVerification statut, string auteur, string commentaire);
         Task<bool> TransitionStatutAsync(int demandeId, StatutDemande newStatut, string auteur, string commentaire);
+
+        /// <summary>
+        /// Clôture le dépôt d'une demande : vérifie que toutes les pièces obligatoires
+        /// sont fournies et conformes, puis fait passer la demande au statut Enregistree.
+        /// </summary>
+        /// <returns>false si la demande n'existe pas ; lève InvalidOperationException si le dossier est incomplet.</returns>
+        Task<bool> CloturerDepotAsync(int demandeId, string auteur, string commentaire);
     }
 }

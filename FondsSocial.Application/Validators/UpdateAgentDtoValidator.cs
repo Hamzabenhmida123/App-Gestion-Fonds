@@ -14,6 +14,7 @@ namespace FondsSocial.Application.Validators
             RuleFor(x => x.IdentifiantUnique).NotEmpty().MaximumLength(100);
             RuleFor(x => x.Adresse).MaximumLength(500);
             RuleFor(x => x.Telephone).MaximumLength(20);
+            RuleFor(x => x.SalaireMensuel).GreaterThan(0).When(x => x.SalaireMensuel.HasValue);
         }
     }
 }

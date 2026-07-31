@@ -20,6 +20,9 @@ namespace FondsSocial.Domain.Entities
         public SituationFamiliale? SituationFamiliale { get; set; }
         public int NombreEnfantsACharge { get; set; }
 
+        /// <summary>Salaire mensuel net en DT — utilisé pour le taux d'endettement (≤ 40 %)</summary>
+        public decimal? SalaireMensuel { get; set; }
+
         public int SocieteId { get; set; }
         public virtual Societe Societe { get; set; } = null!;
 
