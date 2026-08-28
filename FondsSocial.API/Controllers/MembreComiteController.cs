@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using FondsSocial.Application.DTOs;
 using FondsSocial.Domain.Entities;
 using FondsSocial.Infrastructure.UnitOfWork;
 
@@ -10,17 +13,19 @@ namespace FondsSocial.API.Controllers
     public class MembreComiteController : ControllerBase
     {
         private readonly IUnitOfWork _uow;
+        private readonly IMapper _mapper;
 
-        public MembreComiteController(IUnitOfWork uow)
+        public MembreComiteController(IUnitOfWork uow, IMapper mapper)
         {
             _uow = uow;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var list = await _uow.MembreComites.GetAllAsync();
-            return Ok(list);
+            return Ok(_mapper.Map<IEnumerable<MembreComiteDto>>(list));
         }
 
         [HttpGet("{id}")]
@@ -28,24 +33,25 @@ namespace FondsSocial.API.Controllers
         {
             var e = await _uow.MembreComites.GetByIdAsync(id);
             if (e == null) return NotFound();
-            return Ok(e);
+            return Ok(_mapper.Map<MembreComiteDto>(e));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] MembreComite dto)
+        public async Task<IActionResult> Create([FromBody] CreateMembreComiteDto dto)
         {
-            await _uow.MembreComites.AddAsync(dto);
+            var entity = _mapper.Map<MembreComite>(dto);
+            await _uow.MembreComites.AddAsync(entity);
             await _uow.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = dto.Id }, dto);
+            return CreatedAtAction(nameof(Get), new { id = entity.Id }, _mapper.Map<MembreComiteDto>(entity));
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] MembreComite dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdateMembreComiteDto dto)
         {
             var existing = await _uow.MembreComites.GetByIdAsync(id);
             if (existing == null) return NotFound();
-            dto.Id = id;
-            _uow.MembreComites.Update(dto);
+            _mapper.Map(dto, existing);
+            _uow.MembreComites.Update(existing);
             await _uow.SaveChangesAsync();
             return NoContent();
         }

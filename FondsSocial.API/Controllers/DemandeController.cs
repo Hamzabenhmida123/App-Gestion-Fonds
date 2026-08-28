@@ -122,24 +122,4 @@ namespace FondsSocial.API.Controllers
             }
         }
     }
-
-    public class CloturerDepotRequest
-    {
-        public string Auteur { get; set; } = null!;
-        public string? Commentaire { get; set; }
-    }
-
-    public class ChangePieceStatusRequest
-    {
-        public StatutVerification StatutVerification { get; set; }
-        public string Auteur { get; set; } = null!;
-        public string? Commentaire { get; set; }
-    }
-
-    public class TransitionRequest
-    {
-        public StatutDemande NewStatut { get; set; }
-        public string Auteur { get; set; } = null!;
-        public string? Commentaire { get; set; }
-    }
 }

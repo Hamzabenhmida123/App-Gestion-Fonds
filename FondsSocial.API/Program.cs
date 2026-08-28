@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using FondsSocial.API.Filters;
 using FondsSocial.API.Middleware;
 using FondsSocial.Infrastructure;
 using FondsSocial.Application;
@@ -13,7 +14,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Serilog
 builder.Host.UseSerilog((ctx, lc) => lc.WriteTo.Console());
 
-builder.Services.AddControllers();
+builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -39,6 +40,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseStaticFiles();
 app.UseRouting();
 app.UseCors();
 

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
+using Microsoft.Data.SqlClient;
 using FondsSocial.Application.DTOs;
 using FondsSocial.Domain.Entities;
 using FondsSocial.Domain.Enums;
@@ -22,6 +24,17 @@ namespace FondsSocial.Application.Services
         }
 
         public async Task<DemandeDto> CreateAsync(CreateDemandeDto dto)
+        {
+            return await ExecuteInSerializableTransactionAsync(() => CreateInternalAsync(dto));
+        }
+
+        /// <summary>
+        /// Exécute les vérifications d'éligibilité (§5) et la création dans la transaction
+        /// sérialisable ouverte par ExecuteInSerializableTransactionAsync, pour éviter qu'une
+        /// requête concurrente sur le même agent ne passe les contrôles (taux d'endettement,
+        /// plafond cumulé logement, franchise) sur la base de lectures périmées.
+        /// </summary>
+        private async Task<DemandeDto> CreateInternalAsync(CreateDemandeDto dto)
         {
             // verify agent and type
             var agent = await _uow.Agents.GetByIdAsync(dto.AgentId);
@@ -121,6 +134,38 @@ namespace FondsSocial.Application.Services
             return _mapper.Map<DemandeDto>(entity);
         }
 
+        /// <summary>
+        /// Ouvre une transaction sérialisable et réessaie automatiquement en cas de deadlock
+        /// SQL Server (erreur 1205) provoqué par deux créations concurrentes sur le même agent.
+        /// </summary>
+        private async Task<T> ExecuteInSerializableTransactionAsync<T>(Func<Task<T>> operation)
+        {
+            const int maxAttempts = 3;
+            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            {
+                using var transaction = await _uow.BeginTransactionAsync(IsolationLevel.Serializable);
+                try
+                {
+                    var result = await operation();
+                    await transaction.CommitAsync();
+                    return result;
+                }
+                catch (SqlException ex) when (ex.Number == 1205)
+                {
+                    await transaction.RollbackAsync();
+                    if (attempt == maxAttempts)
+                        throw new InvalidOperationException("Impossible de traiter la demande en raison d'accès concurrents répétés sur ce dossier. Veuillez réessayer.");
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+
+            throw new InvalidOperationException("Impossible de traiter la demande.");
+        }
+
         private string GenerateNumeroDossier()
         {
             return $"D-{DateTime.UtcNow:yyyyMMdd}-{Guid.NewGuid().ToString().Split('-')[0].ToUpper()}";
@@ -204,6 +249,17 @@ namespace FondsSocial.Application.Services
 
             if (nonConformes.Count > 0)
                 throw new InvalidOperationException($"Dossier incomplet: pièces non conformes: {string.Join(", ", nonConformes)}.");
+
+            // Pièces obligatoires pas encore vérifiées (EnAttente) : ne suffit pas de ne pas être NonConforme,
+            // il faut que RH les ait explicitement validées comme Conforme.
+            var nonVerifiees = requises
+                .Where(r => r.Obligatoire)
+                .Select(r => r.LibellePiece)
+                .Intersect(fournies.Where(p => p.StatutVerification == StatutVerification.EnAttente).Select(p => p.TypePiece))
+                .ToList();
+
+            if (nonVerifiees.Count > 0)
+                throw new InvalidOperationException($"Dossier incomplet: pièces obligatoires non encore vérifiées: {string.Join(", ", nonVerifiees)}.");
 
             // Tout est complet et conforme → enregistrer la demande
             demande.StatutCourant = StatutDemande.Enregistree;

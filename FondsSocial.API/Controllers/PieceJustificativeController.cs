@@ -1,5 +1,8 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
+using FondsSocial.Application.DTOs;
 using FondsSocial.Domain.Entities;
 using FondsSocial.Infrastructure.UnitOfWork;
 
@@ -10,17 +13,19 @@ namespace FondsSocial.API.Controllers
     public class PieceJustificativeController : ControllerBase
     {
         private readonly IUnitOfWork _uow;
+        private readonly IMapper _mapper;
 
-        public PieceJustificativeController(IUnitOfWork uow)
+        public PieceJustificativeController(IUnitOfWork uow, IMapper mapper)
         {
             _uow = uow;
+            _mapper = mapper;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
             var list = await _uow.PieceJustificatives.GetAllAsync();
-            return Ok(list);
+            return Ok(_mapper.Map<IEnumerable<PieceJustificativeDto>>(list));
         }
 
         [HttpGet("{id}")]
@@ -28,24 +33,25 @@ namespace FondsSocial.API.Controllers
         {
             var e = await _uow.PieceJustificatives.GetByIdAsync(id);
             if (e == null) return NotFound();
-            return Ok(e);
+            return Ok(_mapper.Map<PieceJustificativeDto>(e));
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] PieceJustificative dto)
+        public async Task<IActionResult> Create([FromBody] CreatePieceJustificativeDto dto)
         {
-            await _uow.PieceJustificatives.AddAsync(dto);
+            var entity = _mapper.Map<PieceJustificative>(dto);
+            await _uow.PieceJustificatives.AddAsync(entity);
             await _uow.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = dto.Id }, dto);
+            return CreatedAtAction(nameof(Get), new { id = entity.Id }, _mapper.Map<PieceJustificativeDto>(entity));
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] PieceJustificative dto)
+        public async Task<IActionResult> Update(int id, [FromBody] UpdatePieceJustificativeDto dto)
         {
             var existing = await _uow.PieceJustificatives.GetByIdAsync(id);
             if (existing == null) return NotFound();
-            dto.Id = id;
-            _uow.PieceJustificatives.Update(dto);
+            _mapper.Map(dto, existing);
+            _uow.PieceJustificatives.Update(existing);
             await _uow.SaveChangesAsync();
             return NoContent();
         }

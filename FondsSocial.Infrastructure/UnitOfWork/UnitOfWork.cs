@@ -1,4 +1,7 @@
+using System.Data;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using FondsSocial.Infrastructure.Repositories;
 using FondsSocial.Infrastructure.Data;
 using FondsSocial.Domain.Entities;
@@ -49,6 +52,11 @@ namespace FondsSocial.Infrastructure.UnitOfWork
         public Task<int> SaveChangesAsync()
         {
             return _context.SaveChangesAsync();
+        }
+
+        public Task<IDbContextTransaction> BeginTransactionAsync(IsolationLevel isolationLevel)
+        {
+            return _context.Database.BeginTransactionAsync(isolationLevel);
         }
     }
 }

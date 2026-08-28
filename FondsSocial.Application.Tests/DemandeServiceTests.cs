@@ -2,9 +2,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore.Storage;
 using Moq;
 using Xunit;
 using FondsSocial.Application.Services;
@@ -38,6 +41,23 @@ namespace FondsSocial.Application.Tests
             };
         }
 
+        /// <summary>
+        /// CreateAsync now opens a serializable transaction around its eligibility checks
+        /// (to close a race condition between concurrent requests for the same agent), so
+        /// every test needs IUnitOfWork.BeginTransactionAsync to return a working stub
+        /// transaction, not just the repositories under test.
+        /// </summary>
+        private static Mock<IUnitOfWork> CreateMockUow()
+        {
+            var mockUow = new Mock<IUnitOfWork>();
+            var mockTransaction = new Mock<IDbContextTransaction>();
+            mockTransaction.Setup(t => t.CommitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            mockTransaction.Setup(t => t.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+            mockTransaction.Setup(t => t.DisposeAsync()).Returns(ValueTask.CompletedTask);
+            mockUow.Setup(u => u.BeginTransactionAsync(It.IsAny<IsolationLevel>())).ReturnsAsync(mockTransaction.Object);
+            return mockUow;
+        }
+
         private static Mock<IRepository<T>> StubRepo<T>(T? entity = null, IEnumerable<T>? items = null) where T : class
         {
             var repo = new Mock<IRepository<T>>();
@@ -65,7 +85,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_Agent_NotFound()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
             mockUow.SetupGet(u => u.Agents).Returns(StubRepo<Agent>().Object);
 
             var service = new DemandeService(mockUow.Object, _mapper);
@@ -79,7 +99,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_TypeDePret_NotFound()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
             mockUow.SetupGet(u => u.Agents).Returns(StubRepo(CreateEligibleAgent()).Object);
             mockUow.SetupGet(u => u.TypeDePrets).Returns(StubRepo<TypeDePret>().Object);
 
@@ -94,7 +114,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_Montant_Exceeds_Plafond()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent();
             var type = new TypeDePret { Id = 1, Plafond = 1000, FranchiseMois = 0, DureeMaxMois = 12 };
@@ -114,7 +134,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_Franchise_Not_Respected()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent();
             var type = new TypeDePret { Id = 1, Plafond = 10000, FranchiseMois = 12, DureeMaxMois = 12 };
@@ -136,7 +156,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Rejected_Previous_Demand_Does_Not_Block_Franchise()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent(salaire: 10000m);
             var type = new TypeDePret { Id = 1, Categorie = CategorieBudget.Vehicule, Plafond = 10000, FranchiseMois = 12, DureeMaxMois = 12 };
@@ -163,7 +183,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Caduque_Previous_Demand_Does_Not_Block_Franchise()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent(salaire: 10000m);
             var type = new TypeDePret { Id = 1, Categorie = CategorieBudget.Vehicule, Plafond = 10000, FranchiseMois = 12, DureeMaxMois = 12 };
@@ -192,7 +212,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CloturerDepotAsync_Returns_False_When_Demande_NotFound()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
             mockUow.SetupGet(u => u.Demandes).Returns(StubRepo<Demande>().Object);
 
             var service = new DemandeService(mockUow.Object, _mapper);
@@ -205,7 +225,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CloturerDepotAsync_Throws_When_Required_Pieces_Missing()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var demande = new Demande { Id = 1, TypeDePretId = 1, StatutCourant = StatutDemande.Deposee };
             var requise = new PieceJustificativeRequise { Id = 1, TypeDePretId = 1, LibellePiece = "CIN", Obligatoire = true };
@@ -224,7 +244,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CloturerDepotAsync_Throws_When_Pieces_Non_Conformes()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var demande = new Demande { Id = 1, TypeDePretId = 1, StatutCourant = StatutDemande.Deposee };
             var requise = new PieceJustificativeRequise { Id = 1, TypeDePretId = 1, LibellePiece = "CIN", Obligatoire = true };
@@ -244,7 +264,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CloturerDepotAsync_Succeeds_And_Registers_Demande()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var demande = new Demande { Id = 1, TypeDePretId = 1, StatutCourant = StatutDemande.Deposee };
             var requise = new PieceJustificativeRequise { Id = 1, TypeDePretId = 1, LibellePiece = "CIN", Obligatoire = true };
@@ -272,7 +292,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CloturerDepotAsync_Throws_When_Demande_Not_Deposee()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var demande = new Demande { Id = 1, TypeDePretId = 1, StatutCourant = StatutDemande.AEtude };
             mockUow.SetupGet(u => u.Demandes).Returns(StubRepo(demande).Object);
@@ -288,7 +308,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task TransitionStatutAsync_Allows_Valid_Transition()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var demande = new Demande { Id = 10, StatutCourant = StatutDemande.Deposee };
 
@@ -319,7 +339,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_TitularisationDate_Missing()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = new Agent { Id = 1, SalaireMensuel = 5000 }; // no DateTitularisation
             var type = new TypeDePret { Id = 1, Plafond = 10000, FranchiseMois = 0, DureeMaxMois = 12 };
@@ -339,7 +359,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_Seniority_Below_One_Year()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent(dureeAnciennete: 0); // less than 1 year seniority
             var type = new TypeDePret { Id = 1, Plafond = 10000, FranchiseMois = 0, DureeMaxMois = 12 };
@@ -359,7 +379,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_Salary_Missing()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent(salaire: null);
             var type = new TypeDePret { Id = 1, Plafond = 10000, FranchiseMois = 0, DureeMaxMois = 12 };
@@ -380,7 +400,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_Debt_Ratio_Exceeds_40Percent()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent(salaire: 1000m);
             var type = new TypeDePret { Id = 1, Plafond = 10000, FranchiseMois = 0, DureeMaxMois = 12 };
@@ -404,7 +424,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Throws_When_Logement_Cumulative_Cap_Exceeded()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent(salaire: 10000m);
             var type = new TypeDePret { Id = 1, Categorie = CategorieBudget.Logement, Plafond = 50000, FranchiseMois = 0, DureeMaxMois = 12 };
@@ -430,7 +450,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Succeeds_When_All_Eligibility_Checks_Pass()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             var agent = CreateEligibleAgent(salaire: 10000m);
             var type = new TypeDePret { Id = 1, Categorie = CategorieBudget.Logement, Plafond = 10000, FranchiseMois = 0, DureeMaxMois = 12 };
@@ -460,7 +480,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Computes_Priority_Score_Celibataire_Sans_Enfants()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             // 3 ans d'ancienneté, célibataire, 0 enfant → 3*4 = 12 points
             var agent = CreateEligibleAgent(salaire: 10000m, dureeAnciennete: 3);
@@ -487,7 +507,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Computes_Priority_Score_Marie_Avec_Enfants()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             // 2 ans d'ancienneté, marié, 2 enfants → 8 + 4 + 4 = 16 points
             var agent = CreateEligibleAgent(salaire: 10000m, dureeAnciennete: 2);
@@ -514,7 +534,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Computes_Priority_Score_Divorce_Avec_Garde_Enfants()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             // 5 ans d'ancienneté, divorcé avec 1 enfant → 20 + 4 + 2 = 26 points
             var agent = CreateEligibleAgent(salaire: 10000m, dureeAnciennete: 5);
@@ -541,7 +561,7 @@ namespace FondsSocial.Application.Tests
         [Fact]
         public async Task CreateAsync_Computes_Priority_Score_Veuf_Sans_Enfants_Pas_De_Bonus_Garde()
         {
-            var mockUow = new Mock<IUnitOfWork>();
+            var mockUow = CreateMockUow();
 
             // 1 an d'ancienneté, veuf sans enfant → 4 points (pas de bonus garde d'enfants)
             var agent = CreateEligibleAgent(salaire: 10000m, dureeAnciennete: 1);
