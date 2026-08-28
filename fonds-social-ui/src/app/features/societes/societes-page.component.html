@@ -1,0 +1,65 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Sociétés</h1>
+    <button type="button" class="btn btn-primary" (click)="startCreate()">+ Nouvelle société</button>
+  </div>
+
+  @if (editingId() !== null) {
+    <div class="card">
+      <h3>{{ editingId() ? 'Modifier la société' : 'Nouvelle société' }}</h3>
+      @if (formError()) {
+        <div class="error-banner">{{ formError() }}</div>
+      }
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-grid">
+          <div class="field">
+            <label for="code">Code</label>
+            <input id="code" formControlName="code" />
+          </div>
+          <div class="field">
+            <label for="raisonSociale">Raison sociale</label>
+            <input id="raisonSociale" formControlName="raisonSociale" />
+          </div>
+        </div>
+        <div class="field">
+          <label for="referentiel">Référentiel règles de gestion</label>
+          <textarea id="referentiel" formControlName="referentielReglesGestion"></textarea>
+        </div>
+        <div class="page-header">
+          <div></div>
+          <div style="display:flex; gap: 8px;">
+            <button type="button" class="btn btn-ghost" (click)="cancel()">Annuler</button>
+            <button type="submit" class="btn btn-validate">Enregistrer</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  }
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Raison sociale</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (s of societes(); track s.id) {
+          <tr>
+            <td>{{ s.code }}</td>
+            <td>{{ s.raisonSociale }}</td>
+            <td style="display:flex; gap: 8px;">
+              <button type="button" class="btn btn-ghost" (click)="startEdit(s)">Modifier</button>
+              <button type="button" class="btn btn-secondary" (click)="remove(s)">Supprimer</button>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="3" class="empty-state">Aucune société.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

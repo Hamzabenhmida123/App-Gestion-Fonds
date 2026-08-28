@@ -1,0 +1,126 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Agents</h1>
+    <button type="button" class="btn btn-primary" (click)="startCreate()">+ Nouvel agent</button>
+  </div>
+
+  @if (editingId() !== null) {
+    <div class="card">
+      <h3>{{ editingId() ? 'Modifier l\'agent' : 'Nouvel agent' }}</h3>
+      @if (formError()) {
+        <div class="error-banner">{{ formError() }}</div>
+      }
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-grid">
+          <div class="field">
+            <label for="matricule">Matricule</label>
+            <input id="matricule" formControlName="matricule" />
+          </div>
+          <div class="field">
+            <label for="nom">Nom</label>
+            <input id="nom" formControlName="nom" />
+          </div>
+          <div class="field">
+            <label for="prenom">Prénom</label>
+            <input id="prenom" formControlName="prenom" />
+          </div>
+          <div class="field">
+            <label for="cin">CIN</label>
+            <input id="cin" formControlName="cin" />
+          </div>
+          <div class="field">
+            <label for="identifiantUnique">Identifiant unique</label>
+            <input id="identifiantUnique" formControlName="identifiantUnique" />
+          </div>
+          <div class="field">
+            <label for="societeId">Société</label>
+            <select id="societeId" formControlName="societeId">
+              @for (s of societes(); track s.id) {
+                <option [value]="s.id">{{ s.raisonSociale }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="grade">Grade</label>
+            <input id="grade" formControlName="grade" />
+          </div>
+          <div class="field">
+            <label for="fonction">Fonction</label>
+            <input id="fonction" formControlName="fonction" />
+          </div>
+          <div class="field">
+            <label for="adresse">Adresse</label>
+            <input id="adresse" formControlName="adresse" />
+          </div>
+          <div class="field">
+            <label for="telephone">Téléphone</label>
+            <input id="telephone" formControlName="telephone" />
+          </div>
+          <div class="field">
+            <label for="dateTitularisation">Date de titularisation</label>
+            <input id="dateTitularisation" type="date" formControlName="dateTitularisation" />
+          </div>
+          <div class="field">
+            <label for="situationFamiliale">Situation familiale</label>
+            <select id="situationFamiliale" formControlName="situationFamiliale">
+              <option [ngValue]="null">Non renseignée</option>
+              @for (o of situationFamilialeOptions; track o.value) {
+                <option [ngValue]="o.value">{{ o.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="nombreEnfantsACharge">Enfants à charge</label>
+            <input id="nombreEnfantsACharge" type="number" min="0" formControlName="nombreEnfantsACharge" />
+          </div>
+          <div class="field">
+            <label for="salaireMensuel">Salaire mensuel (DT)</label>
+            <input id="salaireMensuel" type="number" min="0" step="0.01" formControlName="salaireMensuel" />
+          </div>
+        </div>
+        <div class="page-header">
+          <div></div>
+          <div style="display:flex; gap: 8px;">
+            <button type="button" class="btn btn-ghost" (click)="cancel()">Annuler</button>
+            <button type="submit" class="btn btn-validate">Enregistrer</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  }
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Matricule</th>
+          <th>Nom</th>
+          <th>Société</th>
+          <th>Situation</th>
+          <th>Salaire</th>
+          <th>Titularisation</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (a of agents(); track a.id) {
+          <tr>
+            <td>{{ a.matricule }}</td>
+            <td>{{ a.prenom }} {{ a.nom }}</td>
+            <td>{{ societeName(a.societeId) }}</td>
+            <td>{{ situationLabel(a.situationFamiliale) }}</td>
+            <td>{{ a.salaireMensuel ?? '—' }}</td>
+            <td>{{ a.dateTitularisation ? (a.dateTitularisation | slice:0:10) : '—' }}</td>
+            <td style="display:flex; gap: 8px;">
+              <button type="button" class="btn btn-ghost" (click)="startEdit(a)">Modifier</button>
+              <button type="button" class="btn btn-secondary" (click)="remove(a)">Supprimer</button>
+            </td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="7" class="empty-state">Aucun agent.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

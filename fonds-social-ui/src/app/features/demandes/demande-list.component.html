@@ -1,0 +1,82 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Demandes</h1>
+    <a routerLink="/demandes/nouvelle" class="btn btn-primary">+ Nouvelle demande</a>
+  </div>
+
+  <div class="card">
+    <h3>Filtres</h3>
+    <div class="form-grid">
+      <div class="field">
+        <label>Agent</label>
+        <select [(ngModel)]="filterAgentId" (ngModelChange)="load()">
+          <option [ngValue]="null">Tous</option>
+          @for (a of agents(); track a.id) {
+            <option [ngValue]="a.id">{{ a.prenom }} {{ a.nom }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label>Statut</label>
+        <select [(ngModel)]="filterStatut" (ngModelChange)="load()">
+          <option [ngValue]="null">Tous</option>
+          @for (o of statutOptions; track o.value) {
+            <option [ngValue]="o.value">{{ o.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label>Type de prêt</label>
+        <select [(ngModel)]="filterTypeId" (ngModelChange)="load()">
+          <option [ngValue]="null">Tous</option>
+          @for (t of types(); track t.id) {
+            <option [ngValue]="t.id">{{ t.libelle }}</option>
+          }
+        </select>
+      </div>
+      <div class="field">
+        <label>Du</label>
+        <input type="date" [(ngModel)]="filterFrom" (ngModelChange)="load()" />
+      </div>
+      <div class="field">
+        <label>Au</label>
+        <input type="date" [(ngModel)]="filterTo" (ngModelChange)="load()" />
+      </div>
+    </div>
+    <button type="button" class="btn btn-ghost" (click)="resetFilters()">Réinitialiser</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>N° Dossier</th>
+          <th>Agent</th>
+          <th>Type</th>
+          <th>Montant</th>
+          <th>Date dépôt</th>
+          <th>Statut</th>
+          <th>Score</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (d of demandes(); track d.id) {
+          <tr>
+            <td>{{ d.numeroDossier }}</td>
+            <td>{{ agentName(d.agentId) }}</td>
+            <td>{{ typeName(d.typeDePretId) }}</td>
+            <td>{{ d.montantDemande }} DT</td>
+            <td>{{ d.dateDepot | slice:0:10 }}</td>
+            <td><app-status-badge [label]="statutLabel(d.statutCourant)" [color]="statutColor(d.statutCourant)"></app-status-badge></td>
+            <td>{{ d.scorePriorite }}</td>
+            <td><a [routerLink]="['/demandes', d.id]" class="btn btn-ghost">Détails</a></td>
+          </tr>
+        }
+        @empty {
+          <tr><td colspan="8" class="empty-state">Aucune demande.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

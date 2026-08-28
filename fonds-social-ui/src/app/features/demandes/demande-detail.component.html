@@ -1,0 +1,171 @@
+@if (demande(); as d) {
+  <div class="page">
+    <div class="page-header">
+      <div>
+        <h1>Demande {{ d.numeroDossier }}</h1>
+        <p class="muted">
+          {{ agent()?.prenom }} {{ agent()?.nom }} · {{ type()?.libelle }} · {{ d.montantDemande }} DT
+        </p>
+      </div>
+      <div style="display:flex; align-items:center; gap: var(--spacing-3);">
+        <app-status-badge [label]="statutLabels[d.statutCourant]" [color]="statutColors[d.statutCourant]"></app-status-badge>
+        <a routerLink="/demandes" class="btn btn-ghost">Retour</a>
+      </div>
+    </div>
+
+    <div class="form-grid">
+      <div class="card">
+        <h3>Informations</h3>
+        <p><strong>Date de dépôt :</strong> {{ d.dateDepot | slice:0:10 }}</p>
+        <p><strong>Score de priorité :</strong> {{ d.scorePriorite }}</p>
+        <p><strong>Agent :</strong> {{ agent()?.prenom }} {{ agent()?.nom }} ({{ agent()?.matricule }})</p>
+        <p><strong>Type de prêt :</strong> {{ type()?.libelle }}</p>
+      </div>
+
+      <div class="card">
+        <h3>Transition de statut</h3>
+        @if (transitionError()) {
+          <div class="error-banner">{{ transitionError() }}</div>
+        }
+        @if (availableTransitions().length) {
+          <div class="field">
+            <label>Nouveau statut</label>
+            <select [(ngModel)]="transitionTarget">
+              <option [ngValue]="null" disabled>Choisir</option>
+              @for (s of availableTransitions(); track s) {
+                <option [ngValue]="s">{{ statutLabels[s] }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label>Auteur</label>
+            <input [(ngModel)]="transitionAuteur" placeholder="Ex: RH" />
+          </div>
+          <div class="field">
+            <label>Commentaire</label>
+            <input [(ngModel)]="transitionCommentaire" />
+          </div>
+          <button type="button" class="btn btn-validate" (click)="submitTransition()">Appliquer la transition</button>
+        } @else {
+          <p class="muted">Aucune transition possible depuis ce statut.</p>
+        }
+      </div>
+    </div>
+
+    @if (d.statutCourant === 0) {
+      <div class="card">
+        <h3>Clôturer le dépôt</h3>
+        <p class="muted">Vérifie que toutes les pièces obligatoires sont présentes et conformes, puis enregistre la demande.</p>
+        @if (cloturerError()) {
+          <div class="error-banner">{{ cloturerError() }}</div>
+        }
+        <div class="form-grid">
+          <div class="field">
+            <label>Auteur</label>
+            <input [(ngModel)]="cloturerAuteur" placeholder="Ex: RH" />
+          </div>
+          <div class="field">
+            <label>Commentaire</label>
+            <input [(ngModel)]="cloturerCommentaire" />
+          </div>
+        </div>
+        <button type="button" class="btn btn-validate" (click)="submitCloturerDepot()">Clôturer le dépôt</button>
+      </div>
+    }
+
+    <div class="card">
+      <h3>Pièces justificatives</h3>
+      @if (uploadError()) {
+        <div class="error-banner">{{ uploadError() }}</div>
+      }
+      @if (uploadResult(); as missing) {
+        @if (missing.length) {
+          <div class="error-banner">Pièces obligatoires manquantes : {{ missing.join(', ') }}</div>
+        }
+      }
+      <div class="table-wrap" style="margin-bottom: var(--spacing-4);">
+        <table>
+          <thead>
+            <tr><th>Type de pièce</th><th>Dépôt</th><th>Statut</th><th></th></tr>
+          </thead>
+          <tbody>
+            @for (p of d.pieceJustificatives; track p.id) {
+              <tr>
+                <td>{{ p.typePiece }}</td>
+                <td>{{ p.dateDepot | slice:0:10 }}</td>
+                <td><app-status-badge [label]="verificationLabels[p.statutVerification]" [color]="verificationColors[p.statutVerification]"></app-status-badge></td>
+                <td style="display:flex; gap: 8px;">
+                  <button type="button" class="btn btn-validate" (click)="changePieceStatus(p.id, 1)">Conforme</button>
+                  <button type="button" class="btn btn-secondary" (click)="changePieceStatus(p.id, 2)">Non conforme</button>
+                </td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="empty-state">Aucune pièce déposée.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
+        <div class="field" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+          <label>Type de pièce</label>
+          <input [(ngModel)]="uploadTypePiece" placeholder="Ex: CIN" />
+        </div>
+        <div class="field" style="margin-bottom: 0;">
+          <label>Fichier</label>
+          <input type="file" (change)="onFileSelected($event)" />
+        </div>
+        <button type="button" class="btn btn-primary" (click)="submitUpload()">Déposer</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Historique des statuts</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Date</th><th>Statut</th><th>Auteur</th><th>Commentaire</th></tr>
+          </thead>
+          <tbody>
+            @for (h of d.historiqueStatuts; track h.id) {
+              <tr>
+                <td>{{ h.dateChangement | slice:0:10 }}</td>
+                <td><app-status-badge [label]="statutLabels[h.statut]" [color]="statutColors[h.statut]"></app-status-badge></td>
+                <td>{{ h.auteur }}</td>
+                <td>{{ h.commentaire || '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="empty-state">Aucun historique.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Décisions du comité</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Sens</th><th>Montant accordé</th><th>Notification</th><th>Péremption</th></tr>
+          </thead>
+          <tbody>
+            @for (dec of d.decisions; track dec.id) {
+              <tr>
+                <td><app-status-badge [label]="sensLabels[dec.sensDecision]" [color]="sensColors[dec.sensDecision]"></app-status-badge></td>
+                <td>{{ dec.montantAccorde ?? '—' }}</td>
+                <td>{{ dec.dateNotification ? (dec.dateNotification | slice:0:10) : '—' }}</td>
+                <td>{{ dec.datePeremption ? (dec.datePeremption | slice:0:10) : '—' }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="4" class="empty-state">Aucune décision.</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+} @else if (loading()) {
+  <div class="page"><p class="muted">Chargement…</p></div>
+} @else {
+  <div class="page"><p class="empty-state">Demande introuvable.</p></div>
+}

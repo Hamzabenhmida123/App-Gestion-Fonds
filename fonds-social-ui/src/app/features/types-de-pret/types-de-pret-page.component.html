@@ -1,0 +1,153 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Types de prêt</h1>
+    <button type="button" class="btn btn-primary" (click)="startCreate()">+ Nouveau type</button>
+  </div>
+
+  @if (editingId() !== null) {
+    <div class="card">
+      <h3>{{ editingId() ? 'Modifier le type de prêt' : 'Nouveau type de prêt' }}</h3>
+      @if (formError()) {
+        <div class="error-banner">{{ formError() }}</div>
+      }
+      <form [formGroup]="form" (ngSubmit)="save()">
+        <div class="form-grid">
+          <div class="field">
+            <label for="code">Code</label>
+            <input id="code" formControlName="code" />
+          </div>
+          <div class="field">
+            <label for="libelle">Libellé</label>
+            <input id="libelle" formControlName="libelle" />
+          </div>
+          <div class="field">
+            <label for="categorie">Catégorie</label>
+            <select id="categorie" formControlName="categorie">
+              @for (o of categorieOptions; track o.value) {
+                <option [value]="o.value">{{ o.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="plafond">Plafond (DT)</label>
+            <input id="plafond" type="number" min="0" step="0.01" formControlName="plafond" />
+          </div>
+          <div class="field">
+            <label for="dureeMaxMois">Durée max (mois)</label>
+            <input id="dureeMaxMois" type="number" min="1" formControlName="dureeMaxMois" />
+          </div>
+          <div class="field">
+            <label for="franchiseMois">Franchise (mois)</label>
+            <input id="franchiseMois" type="number" min="0" formControlName="franchiseMois" />
+          </div>
+          <div class="field">
+            <label for="modeCalculFraisGestion">Mode calcul frais</label>
+            <select id="modeCalculFraisGestion" formControlName="modeCalculFraisGestion">
+              @for (o of modeFraisOptions; track o.value) {
+                <option [value]="o.value">{{ o.label }}</option>
+              }
+            </select>
+          </div>
+          <div class="field">
+            <label for="tauxOuMontantFraisGestion">Taux / montant frais</label>
+            <input id="tauxOuMontantFraisGestion" type="number" min="0" step="0.01" formControlName="tauxOuMontantFraisGestion" />
+          </div>
+          <div class="field">
+            <label for="actif">Actif</label>
+            <select id="actif" formControlName="actif">
+              <option [ngValue]="true">Oui</option>
+              <option [ngValue]="false">Non</option>
+            </select>
+          </div>
+        </div>
+        <div class="page-header">
+          <div></div>
+          <div style="display:flex; gap: 8px;">
+            <button type="button" class="btn btn-ghost" (click)="cancel()">Annuler</button>
+            <button type="submit" class="btn btn-validate">Enregistrer</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  }
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Libellé</th>
+          <th>Catégorie</th>
+          <th>Plafond</th>
+          <th>Durée max</th>
+          <th>Franchise</th>
+          <th>Actif</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (t of types(); track t.id) {
+          <tr>
+            <td>{{ t.code }}</td>
+            <td>{{ t.libelle }}</td>
+            <td>{{ categorieLabel(t.categorie) }}</td>
+            <td>{{ t.plafond }} DT</td>
+            <td>{{ t.dureeMaxMois }} mois</td>
+            <td>{{ t.franchiseMois }} mois</td>
+            <td>{{ t.actif ? 'Oui' : 'Non' }}</td>
+            <td style="display:flex; gap: 8px;">
+              <button type="button" class="btn btn-ghost" (click)="toggleRequiredDocs(t)">Pièces requises</button>
+              <button type="button" class="btn btn-ghost" (click)="startEdit(t)">Modifier</button>
+              <button type="button" class="btn btn-secondary" (click)="remove(t)">Supprimer</button>
+            </td>
+          </tr>
+          @if (expandedTypeId() === t.id) {
+            <tr>
+              <td colspan="8">
+                <div class="card" style="margin: 0;">
+                  <h3>Pièces requises — {{ t.libelle }}</h3>
+                  <div class="table-wrap" style="margin-bottom: var(--spacing-4);">
+                    <table>
+                      <thead>
+                        <tr><th>Libellé</th><th>Obligatoire</th><th></th></tr>
+                      </thead>
+                      <tbody>
+                        @for (p of pieces(); track p.id) {
+                          <tr>
+                            <td>{{ p.libellePiece }}</td>
+                            <td>{{ p.obligatoire ? 'Oui' : 'Non' }}</td>
+                            <td><button type="button" class="btn btn-secondary" (click)="removePiece(p)">Retirer</button></td>
+                          </tr>
+                        }
+                        @empty {
+                          <tr><td colspan="3" class="empty-state">Aucune pièce requise.</td></tr>
+                        }
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style="display:flex; gap: 8px; align-items: flex-end;">
+                    <div class="field" style="margin-bottom: 0; flex: 1;">
+                      <label>Libellé de la pièce</label>
+                      <input [(ngModel)]="newPieceLabel" [ngModelOptions]="{standalone: true}" placeholder="Ex: CIN" />
+                    </div>
+                    <div class="field" style="margin-bottom: 0;">
+                      <label>Obligatoire</label>
+                      <select [(ngModel)]="newPieceObligatoire" [ngModelOptions]="{standalone: true}">
+                        <option [ngValue]="true">Oui</option>
+                        <option [ngValue]="false">Non</option>
+                      </select>
+                    </div>
+                    <button type="button" class="btn btn-primary" (click)="addPiece()">Ajouter</button>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          }
+        }
+        @empty {
+          <tr><td colspan="8" class="empty-state">Aucun type de prêt.</td></tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

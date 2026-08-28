@@ -1,0 +1,51 @@
+<header class="topbar">
+  <div class="topbar-inner">
+    <a routerLink="/" class="brand" (click)="closeMenu()">
+      <img src="/albaraka-logo.png" alt="alBaraka Assurances" class="brand-logo" />
+      <span class="brand-divider" aria-hidden="true"></span>
+      <span class="brand-title">Fonds Social</span>
+    </a>
+
+    <button type="button" class="hamburger" (click)="toggleMenu()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="nav" [class.nav-open]="menuOpen()">
+      <a routerLink="/demandes" routerLinkActive="active" (click)="closeMenu()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v4h4"/><path d="M9 13h6M9 17h6"/></svg>
+        <span>Demandes</span>
+      </a>
+      <a routerLink="/agents" routerLinkActive="active" (click)="closeMenu()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 20c.7-3.4 3-5.4 5.5-5.4s4.8 2 5.5 5.4"/><circle cx="17.5" cy="8.5" r="2.6"/><path d="M15.8 14.9c2.1.3 3.9 2.1 4.6 5.1"/></svg>
+        <span>Agents</span>
+      </a>
+      <a routerLink="/societes" routerLinkActive="active" (click)="closeMenu()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V6l8-3 8 3v15"/><path d="M4 21h16"/><path d="M9 10h.01M9 14h.01M15 10h.01M15 14h.01"/><path d="M10 21v-5h4v5"/></svg>
+        <span>Sociétés</span>
+      </a>
+      <a routerLink="/types-de-pret" routerLinkActive="active" (click)="closeMenu()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="7.5" r="2.3"/><circle cx="16.5" cy="16.5" r="2.3"/><path d="M6 18 18 6"/></svg>
+        <span>Types de prêt</span>
+      </a>
+      <a routerLink="/comite" routerLinkActive="active" (click)="closeMenu()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3.5" width="14" height="17" rx="1.5"/><path d="M9 3.5v3h6v-3"/><path d="M8.5 12h7M8.5 15.5h7"/></svg>
+        <span>Comité</span>
+      </a>
+      <a routerLink="/finance" routerLinkActive="active" (click)="closeMenu()">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V10M10 19V5M16 19v-7M20 19V9"/></svg>
+        <span>Finance</span>
+      </a>
+    </nav>
+  </div>
+  <div class="topbar-accent"></div>
+</header>
+
+<main>
+  <router-outlet></router-outlet>
+</main>
+
+<footer class="app-footer">
+  <span>&copy; {{ year }} alBaraka Assurances &middot; Fonds Social</span>
+</footer>
+
+<app-toast-container></app-toast-container>

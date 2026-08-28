@@ -1,0 +1,50 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Nouvelle demande</h1>
+    <a routerLink="/demandes" class="btn btn-ghost">Retour</a>
+  </div>
+
+  <div class="card">
+    @if (formError()) {
+      <div class="error-banner">{{ formError() }}</div>
+    }
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-grid">
+        <div class="field">
+          <label for="agentId">Agent</label>
+          <select id="agentId" formControlName="agentId">
+            <option [ngValue]="0" disabled>Choisir un agent</option>
+            @for (a of agents(); track a.id) {
+              <option [ngValue]="a.id">{{ a.prenom }} {{ a.nom }} ({{ a.matricule }})</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="typeDePretId">Type de prêt</label>
+          <select id="typeDePretId" formControlName="typeDePretId">
+            <option [ngValue]="0" disabled>Choisir un type</option>
+            @for (t of types(); track t.id) {
+              <option [ngValue]="t.id">{{ t.libelle }} (plafond {{ t.plafond }} DT)</option>
+            }
+          </select>
+        </div>
+        <div class="field">
+          <label for="dateDepot">Date de dépôt</label>
+          <input id="dateDepot" type="date" formControlName="dateDepot" />
+        </div>
+        <div class="field">
+          <label for="montantDemande">Montant demandé (DT)</label>
+          <input id="montantDemande" type="number" min="1" step="0.01" formControlName="montantDemande" />
+        </div>
+      </div>
+      @if (selectedType(); as t) {
+        <p class="muted">
+          Plafond : {{ t.plafond }} DT · Durée max : {{ t.dureeMaxMois }} mois · Franchise : {{ t.franchiseMois }} mois
+        </p>
+      }
+      <button type="submit" class="btn btn-validate" [disabled]="submitting()">
+        {{ submitting() ? 'Vérification en cours…' : 'Créer la demande' }}
+      </button>
+    </form>
+  </div>
+</div>

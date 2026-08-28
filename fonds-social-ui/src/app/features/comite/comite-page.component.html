@@ -1,0 +1,193 @@
+<div class="page">
+  <div class="page-header">
+    <h1>Comité</h1>
+    <div style="display:flex; gap: 8px;">
+      <button type="button" class="btn" [class.btn-primary]="tab() === 'membres'" [class.btn-ghost]="tab() !== 'membres'" (click)="tab.set('membres')">Membres</button>
+      <button type="button" class="btn" [class.btn-primary]="tab() === 'seances'" [class.btn-ghost]="tab() !== 'seances'" (click)="tab.set('seances')">Séances</button>
+    </div>
+  </div>
+
+  @if (tab() === 'membres') {
+    @if (membreEditingId() === null) {
+      <button type="button" class="btn btn-primary" style="margin-bottom: var(--spacing-4);" (click)="startCreateMembre()">+ Nouveau membre</button>
+    } @else {
+      <div class="card">
+        <h3>{{ membreEditingId() ? 'Modifier le membre' : 'Nouveau membre' }}</h3>
+        <div class="form-grid">
+          <div class="field"><label>Nom</label><input [(ngModel)]="membreForm.nom" /></div>
+          <div class="field"><label>Prénom</label><input [(ngModel)]="membreForm.prenom" /></div>
+          <div class="field"><label>Fonction</label><input [(ngModel)]="membreForm.fonction" /></div>
+          <div class="field">
+            <label>Actif</label>
+            <select [(ngModel)]="membreForm.actif">
+              <option [ngValue]="true">Oui</option>
+              <option [ngValue]="false">Non</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex; gap: 8px;">
+          <button type="button" class="btn btn-ghost" (click)="cancelMembre()">Annuler</button>
+          <button type="button" class="btn btn-validate" (click)="saveMembre()">Enregistrer</button>
+        </div>
+      </div>
+    }
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Nom</th><th>Fonction</th><th>Actif</th><th></th></tr></thead>
+        <tbody>
+          @for (m of membres(); track m.id) {
+            <tr>
+              <td>{{ m.prenom }} {{ m.nom }}</td>
+              <td>{{ m.fonction || '—' }}</td>
+              <td>{{ m.actif ? 'Oui' : 'Non' }}</td>
+              <td style="display:flex; gap: 8px;">
+                <button type="button" class="btn btn-ghost" (click)="startEditMembre(m)">Modifier</button>
+                <button type="button" class="btn btn-secondary" (click)="removeMembre(m)">Supprimer</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="empty-state">Aucun membre.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+
+  @if (tab() === 'seances') {
+    @if (seanceEditingId() === null) {
+      <button type="button" class="btn btn-primary" style="margin-bottom: var(--spacing-4);" (click)="startCreateSeance()">+ Nouvelle séance</button>
+    } @else {
+      <div class="card">
+        <h3>{{ seanceEditingId() ? 'Modifier la séance' : 'Nouvelle séance' }}</h3>
+        <div class="form-grid">
+          <div class="field"><label>Date</label><input type="date" [(ngModel)]="seanceForm.date" /></div>
+          <div class="field">
+            <label>Statut visa/signature</label>
+            <select [(ngModel)]="seanceForm.statutVisaSignature">
+              @for (o of statutVisaOptions; track o.value) {
+                <option [ngValue]="o.value">{{ o.label }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>Procès-verbal</label><textarea [(ngModel)]="seanceForm.procesVerbal"></textarea></div>
+        <div style="display:flex; gap: 8px;">
+          <button type="button" class="btn btn-ghost" (click)="cancelSeance()">Annuler</button>
+          <button type="button" class="btn btn-validate" (click)="saveSeance()">Enregistrer</button>
+        </div>
+      </div>
+    }
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Date</th><th>Statut</th><th></th></tr></thead>
+        <tbody>
+          @for (s of seances(); track s.id) {
+            <tr>
+              <td>{{ s.date | slice:0:10 }}</td>
+              <td>{{ statutVisaLabels[s.statutVisaSignature] }}</td>
+              <td style="display:flex; gap: 8px;">
+                <button type="button" class="btn btn-ghost" (click)="toggleSeance(s)">Détails</button>
+                <button type="button" class="btn btn-ghost" (click)="startEditSeance(s)">Modifier</button>
+                <button type="button" class="btn btn-secondary" (click)="removeSeance(s)">Supprimer</button>
+              </td>
+            </tr>
+            @if (expandedSeanceId() === s.id) {
+              <tr>
+                <td colspan="3">
+                  <div class="form-grid">
+                    <div class="card" style="margin: 0;">
+                      <h3>Participations</h3>
+                      <div class="table-wrap" style="margin-bottom: var(--spacing-4);">
+                        <table>
+                          <thead><tr><th>Membre</th><th>A visé</th><th></th></tr></thead>
+                          <tbody>
+                            @for (p of participations(); track p.id) {
+                              <tr>
+                                <td>{{ membreName(p.membreComiteId) }}</td>
+                                <td>{{ p.aVise ? 'Oui' : 'Non' }}</td>
+                                <td><button type="button" class="btn btn-secondary" (click)="removeParticipation(p)">Retirer</button></td>
+                              </tr>
+                            } @empty {
+                              <tr><td colspan="3" class="empty-state">Aucune participation.</td></tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="form-grid">
+                        <div class="field">
+                          <label>Membre</label>
+                          <select [(ngModel)]="newParticipation.membreComiteId">
+                            <option [ngValue]="0" disabled>Choisir</option>
+                            @for (m of membres(); track m.id) {
+                              <option [ngValue]="m.id">{{ m.prenom }} {{ m.nom }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="field">
+                          <label>A visé</label>
+                          <select [(ngModel)]="newParticipation.aVise">
+                            <option [ngValue]="true">Oui</option>
+                            <option [ngValue]="false">Non</option>
+                          </select>
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn-primary" (click)="addParticipation()">Ajouter</button>
+                    </div>
+
+                    <div class="card" style="margin: 0;">
+                      <h3>Décisions</h3>
+                      <div class="table-wrap" style="margin-bottom: var(--spacing-4);">
+                        <table>
+                          <thead><tr><th>Demande</th><th>Sens</th><th>Montant</th></tr></thead>
+                          <tbody>
+                            @for (d of decisions(); track d.id) {
+                              <tr>
+                                <td>{{ demandeLabel(d.demandeId) }}</td>
+                                <td>{{ sensLabels[d.sensDecision] }}</td>
+                                <td>{{ d.montantAccorde ?? '—' }}</td>
+                              </tr>
+                            } @empty {
+                              <tr><td colspan="3" class="empty-state">Aucune décision.</td></tr>
+                            }
+                          </tbody>
+                        </table>
+                      </div>
+                      <div class="form-grid">
+                        <div class="field">
+                          <label>Demande</label>
+                          <select [(ngModel)]="newDecision.demandeId">
+                            <option [ngValue]="0" disabled>Choisir</option>
+                            @for (d of demandes(); track d.id) {
+                              <option [ngValue]="d.id">{{ d.numeroDossier }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="field">
+                          <label>Sens</label>
+                          <select [(ngModel)]="newDecision.sensDecision">
+                            @for (o of sensOptions; track o.value) {
+                              <option [ngValue]="o.value">{{ o.label }}</option>
+                            }
+                          </select>
+                        </div>
+                        <div class="field">
+                          <label>Montant accordé</label>
+                          <input type="number" min="0" step="0.01" [(ngModel)]="newDecision.montantAccorde" />
+                        </div>
+                      </div>
+                      <button type="button" class="btn btn-primary" (click)="addDecision()">Enregistrer la décision</button>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          } @empty {
+            <tr><td colspan="3" class="empty-state">Aucune séance.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>
