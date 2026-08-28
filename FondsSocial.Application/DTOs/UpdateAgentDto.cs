@@ -1,4 +1,5 @@
 using System;
+using FondsSocial.Domain.Enums;
 
 namespace FondsSocial.Application.DTOs
 {
@@ -14,6 +15,7 @@ namespace FondsSocial.Application.DTOs
         public string? Adresse { get; set; }
         public string? Telephone { get; set; }
         public DateTime? DateTitularisation { get; set; }
+        public SituationFamiliale? SituationFamiliale { get; set; }
         public int NombreEnfantsACharge { get; set; }
         public decimal? SalaireMensuel { get; set; }
         public int SocieteId { get; set; }

@@ -1,5 +1,4 @@
 using System;
-using FondsSocial.Domain.Enums;
 
 namespace FondsSocial.Application.DTOs
 {
@@ -9,7 +8,5 @@ namespace FondsSocial.Application.DTOs
         public int TypeDePretId { get; set; }
         public DateTime DateDepot { get; set; }
         public decimal MontantDemande { get; set; }
-        public StatutDemande StatutCourant { get; set; }
-        public decimal ScorePriorite { get; set; }
     }
 }
