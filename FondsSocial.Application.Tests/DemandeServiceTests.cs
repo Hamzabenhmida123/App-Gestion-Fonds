@@ -49,8 +49,17 @@ namespace FondsSocial.Application.Tests
         /// </summary>
         private static Mock<IUnitOfWork> CreateMockUow()
         {
+            return CreateMockUow(out _);
+        }
+
+        /// <summary>
+        /// Overload exposing the stub transaction mock so tests can verify Commit/Rollback
+        /// were actually called by ExecuteInSerializableTransactionAsync.
+        /// </summary>
+        private static Mock<IUnitOfWork> CreateMockUow(out Mock<IDbContextTransaction> mockTransaction)
+        {
             var mockUow = new Mock<IUnitOfWork>();
-            var mockTransaction = new Mock<IDbContextTransaction>();
+            mockTransaction = new Mock<IDbContextTransaction>();
             mockTransaction.Setup(t => t.CommitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             mockTransaction.Setup(t => t.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
             mockTransaction.Setup(t => t.DisposeAsync()).Returns(ValueTask.CompletedTask);
@@ -258,6 +267,29 @@ namespace FondsSocial.Application.Tests
 
             var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await service.CloturerDepotAsync(1, "tester", "clôture"));
             Assert.Contains("pièces non conformes", ex.Message);
+            Assert.Contains("CIN", ex.Message);
+        }
+
+        [Fact]
+        public async Task CloturerDepotAsync_Throws_When_Required_Piece_Still_EnAttente()
+        {
+            // Régression: une pièce jamais vérifiée (EnAttente) ne doit pas suffire à clôturer
+            // le dépôt - il ne suffit pas qu'elle soit "pas NonConforme", RH doit l'avoir
+            // explicitement validée comme Conforme.
+            var mockUow = CreateMockUow();
+
+            var demande = new Demande { Id = 1, TypeDePretId = 1, StatutCourant = StatutDemande.Deposee };
+            var requise = new PieceJustificativeRequise { Id = 1, TypeDePretId = 1, LibellePiece = "CIN", Obligatoire = true };
+            var piece = new PieceJustificative { Id = 1, DemandeId = 1, TypePiece = "CIN", StatutVerification = StatutVerification.EnAttente };
+
+            mockUow.SetupGet(u => u.Demandes).Returns(StubRepo(demande).Object);
+            mockUow.SetupGet(u => u.PieceJustificativeRequises).Returns(StubRepo<PieceJustificativeRequise>(items: new List<PieceJustificativeRequise> { requise }).Object);
+            mockUow.SetupGet(u => u.PieceJustificatives).Returns(StubRepo<PieceJustificative>(items: new List<PieceJustificative> { piece }).Object);
+
+            var service = new DemandeService(mockUow.Object, _mapper);
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await service.CloturerDepotAsync(1, "tester", "clôture"));
+            Assert.Contains("non encore vérifiées", ex.Message);
             Assert.Contains("CIN", ex.Message);
         }
 
@@ -471,6 +503,48 @@ namespace FondsSocial.Application.Tests
             Assert.NotNull(result);
             Assert.Equal(StatutDemande.Deposee, result.StatutCourant);
             Assert.StartsWith("D-", result.NumeroDossier);
+        }
+
+        #endregion
+
+        #region Transaction sérialisable (race condition sur les vérifications d'éligibilité)
+
+        [Fact]
+        public async Task CreateAsync_CommitsTransaction_OnSuccess()
+        {
+            var mockUow = CreateMockUow(out var mockTransaction);
+
+            var agent = CreateEligibleAgent(salaire: 10000m);
+            var type = new TypeDePret { Id = 1, Categorie = CategorieBudget.Logement, Plafond = 10000, FranchiseMois = 0, DureeMaxMois = 12 };
+
+            mockUow.SetupGet(u => u.Agents).Returns(StubRepo(agent).Object);
+            mockUow.SetupGet(u => u.TypeDePrets).Returns(StubRepo(type, new List<TypeDePret> { type }).Object);
+            mockUow.SetupGet(u => u.Demandes).Returns(StubRepo<Demande>(items: new List<Demande>()).Object);
+            mockUow.SetupGet(u => u.RetenuesMensuelles).Returns(StubRepo<RetenueMensuelle>(items: new List<RetenueMensuelle>()).Object);
+            mockUow.SetupGet(u => u.Decisions).Returns(StubRepo<Decision>(items: new List<Decision>()).Object);
+            mockUow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+            var service = new DemandeService(mockUow.Object, _mapper);
+
+            await service.CreateAsync(CreateDemandeDto(montant: 5000));
+
+            mockTransaction.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+            mockTransaction.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task CreateAsync_RollsBackTransaction_OnEligibilityFailure_And_DoesNotMaskOriginalException()
+        {
+            var mockUow = CreateMockUow(out var mockTransaction);
+            mockUow.SetupGet(u => u.Agents).Returns(StubRepo<Agent>().Object);
+
+            var service = new DemandeService(mockUow.Object, _mapper);
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await service.CreateAsync(CreateDemandeDto()));
+
+            Assert.Equal("Agent introuvable", ex.Message);
+            mockTransaction.Verify(t => t.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
+            mockTransaction.Verify(t => t.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
 
         #endregion
