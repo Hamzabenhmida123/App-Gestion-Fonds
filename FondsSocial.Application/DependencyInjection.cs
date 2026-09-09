@@ -22,6 +22,9 @@ namespace FondsSocial.Application
             services.AddScoped<Services.IDecisionService, Services.DecisionService>();
             services.AddScoped<Services.IContratService, Services.ContratService>();
             services.AddScoped<Services.IEcheanceService, Services.EcheanceService>();
+            services.AddScoped<Services.IParticipationSeanceService, Services.ParticipationSeanceService>();
+            services.AddScoped<Services.IGarantieService, Services.GarantieService>();
+            services.AddScoped<Services.IRetenueMensuelleService, Services.RetenueMensuelleService>();
 
             return services;
         }
