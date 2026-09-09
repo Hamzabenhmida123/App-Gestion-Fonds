@@ -15,7 +15,7 @@ namespace FondsSocial.Infrastructure.Data.Configurations
             builder.Property(e => e.CapitalAmorti).HasColumnType("decimal(18,3)");
             builder.Property(e => e.FraisGestion).HasColumnType("decimal(18,3)");
             builder.Property(e => e.SoldeRestant).HasColumnType("decimal(18,3)");
-            builder.HasIndex(e => new { e.ContratId, e.NumeroEcheance }).IsUnique().HasDatabaseName("IX_Echeance_Contrat_Numero");
+            builder.HasIndex(e => new { e.ContratId, e.NumeroEcheance }).IsUnique().HasDatabaseName("IX_Echeance_Contrat_Numero").HasFilter("[IsDeleted] = 0");
             builder.HasOne(e => e.Contrat).WithMany(c => c.Echeances).HasForeignKey(e => e.ContratId).OnDelete(DeleteBehavior.Cascade);
         }
     }

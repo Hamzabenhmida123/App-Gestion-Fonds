@@ -48,7 +48,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseStaticFiles();
+// Plus de UseStaticFiles(): les pièces justificatives (wwwroot/uploads) ne sont plus
+// exposées telles quelles - accès uniquement via DemandeController.DownloadPiece,
+// qui vérifie que la pièce existe réellement en base avant de servir le fichier.
 app.UseRouting();
 app.UseCors();
 

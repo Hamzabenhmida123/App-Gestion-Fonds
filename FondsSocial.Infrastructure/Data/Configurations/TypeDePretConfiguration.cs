@@ -11,7 +11,7 @@ namespace FondsSocial.Infrastructure.Data.Configurations
             builder.ToTable("TypeDePrets");
             builder.HasKey(t => t.Id);
             builder.Property(t => t.Code).IsRequired().HasMaxLength(50);
-            builder.HasIndex(t => t.Code).IsUnique().HasDatabaseName("IX_TypeDePret_Code");
+            builder.HasIndex(t => t.Code).IsUnique().HasDatabaseName("IX_TypeDePret_Code").HasFilter("[IsDeleted] = 0");
             builder.Property(t => t.Libelle).IsRequired().HasMaxLength(200);
             builder.Property(t => t.Plafond).HasColumnType("decimal(18,3)");
             builder.Property(t => t.TauxOuMontantFraisGestion).HasColumnType("decimal(18,3)");

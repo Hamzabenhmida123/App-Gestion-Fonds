@@ -11,7 +11,7 @@ namespace FondsSocial.Infrastructure.Data.Configurations
             builder.ToTable("Demandes");
             builder.HasKey(d => d.Id);
             builder.Property(d => d.NumeroDossier).IsRequired().HasMaxLength(100);
-            builder.HasIndex(d => d.NumeroDossier).IsUnique().HasDatabaseName("IX_Demande_NumeroDossier");
+            builder.HasIndex(d => d.NumeroDossier).IsUnique().HasDatabaseName("IX_Demande_NumeroDossier").HasFilter("[IsDeleted] = 0");
             builder.Property(d => d.MontantDemande).HasColumnType("decimal(18,3)");
             builder.Property(d => d.ScorePriorite).HasColumnType("decimal(18,3)");
 

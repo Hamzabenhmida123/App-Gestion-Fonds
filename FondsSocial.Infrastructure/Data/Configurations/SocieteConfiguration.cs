@@ -11,7 +11,7 @@ namespace FondsSocial.Infrastructure.Data.Configurations
             builder.ToTable("Societes");
             builder.HasKey(s => s.Id);
             builder.Property(s => s.Code).IsRequired().HasMaxLength(50);
-            builder.HasIndex(s => s.Code).IsUnique().HasDatabaseName("IX_Societe_Code");
+            builder.HasIndex(s => s.Code).IsUnique().HasDatabaseName("IX_Societe_Code").HasFilter("[IsDeleted] = 0");
             builder.Property(s => s.RaisonSociale).IsRequired().HasMaxLength(250);
             builder.Property(s => s.ReferentielReglesGestion).HasMaxLength(2000);
 

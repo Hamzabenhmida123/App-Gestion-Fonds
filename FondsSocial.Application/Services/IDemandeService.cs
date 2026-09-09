@@ -12,6 +12,7 @@ namespace FondsSocial.Application.Services
         Task<DemandeDto?> GetByIdWithDetailsAsync(int id);
         Task<IEnumerable<DemandeDto>> GetAllFilteredAsync(int? agentId, StatutDemande? statut, int? typeDePretId, DateTime? from, DateTime? to);
         Task<IEnumerable<string>> AddPieceRecordAsync(CreatePieceJustificativeDto dto);
+        Task<PieceJustificativeDto?> GetPieceByIdAsync(int pieceId);
         Task<bool> ChangePieceStatusAsync(int pieceId, StatutVerification statut, string auteur, string commentaire);
         Task<bool> TransitionStatutAsync(int demandeId, StatutDemande newStatut, string auteur, string commentaire);
 

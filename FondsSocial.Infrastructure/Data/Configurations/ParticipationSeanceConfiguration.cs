@@ -10,7 +10,7 @@ namespace FondsSocial.Infrastructure.Data.Configurations
         {
             builder.ToTable("ParticipationSeances");
             builder.HasKey(p => p.Id);
-            builder.HasIndex(p => new { p.SeanceComiteId, p.MembreComiteId }).IsUnique().HasDatabaseName("IX_ParticipationSeance_Seance_Membre");
+            builder.HasIndex(p => new { p.SeanceComiteId, p.MembreComiteId }).IsUnique().HasDatabaseName("IX_ParticipationSeance_Seance_Membre").HasFilter("[IsDeleted] = 0");
             builder.HasOne(p => p.MembreComite).WithMany(m => m.Participations).HasForeignKey(p => p.MembreComiteId).OnDelete(DeleteBehavior.Cascade);
         }
     }

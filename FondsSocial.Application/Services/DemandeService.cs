@@ -219,6 +219,12 @@ namespace FondsSocial.Application.Services
             return missing;
         }
 
+        public async Task<PieceJustificativeDto?> GetPieceByIdAsync(int pieceId)
+        {
+            var piece = await _uow.PieceJustificatives.GetByIdAsync(pieceId);
+            return piece == null ? null : _mapper.Map<PieceJustificativeDto>(piece);
+        }
+
         public async Task<bool> CloturerDepotAsync(int demandeId, string auteur, string commentaire)
         {
             var demande = await _uow.Demandes.GetByIdAsync(demandeId);
