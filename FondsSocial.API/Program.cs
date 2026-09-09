@@ -11,8 +11,10 @@ using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Serilog
-builder.Host.UseSerilog((ctx, lc) => lc.WriteTo.Console());
+// Serilog: console pour le développement, fichier journalier pour la traçabilité des exceptions.
+builder.Host.UseSerilog((ctx, lc) => lc
+    .WriteTo.Console()
+    .WriteTo.File("logs/fonds-social-.log", rollingInterval: RollingInterval.Day, retainedFileCountLimit: 30));
 
 builder.Services.AddControllers(options => options.Filters.Add<ValidationFilter>());
 builder.Services.AddEndpointsApiExplorer();
@@ -28,7 +30,13 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
-builder.Services.AddCors(options => options.AddDefaultPolicy(p => p.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod()));
+// CORS: liste d'origines autorisées définie par environnement (appsettings.json / appsettings.Development.json),
+// jamais AllowAnyOrigin. Une liste vide bloque toute requête cross-origin par défaut (fail-safe).
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+builder.Services.AddCors(options => options.AddDefaultPolicy(p => p
+    .WithOrigins(allowedOrigins)
+    .AllowAnyHeader()
+    .AllowAnyMethod()));
 
 var app = builder.Build();
 
