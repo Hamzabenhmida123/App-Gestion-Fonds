@@ -163,6 +163,30 @@ namespace FondsSocial.Application.Tests
         }
 
         [Fact]
+        public async Task CreateAsync_Franchise_Counts_Full_Months_Not_Calendar_Month_Difference()
+        {
+            // Régression: avant le correctif, une demande du 31 décembre suivie d'une nouvelle
+            // demande le 1er janvier (1 seul jour d'écart) était comptée comme "1 mois écoulé"
+            // par le calcul naïf (année*12+mois), ce qui aurait permis de contourner une
+            // franchise d'1 mois alors qu'aucun mois plein ne s'est réellement écoulé.
+            var mockUow = CreateMockUow();
+
+            var agent = new Agent { Id = 1, DateTitularisation = new DateTime(2000, 1, 1), SalaireMensuel = 5000m };
+            var type = new TypeDePret { Id = 1, Plafond = 10000, FranchiseMois = 1, DureeMaxMois = 12 };
+            var previous = new Demande { Id = 5, AgentId = 1, TypeDePretId = 1, DateDepot = new DateTime(2025, 12, 31) };
+
+            mockUow.SetupGet(u => u.Agents).Returns(StubRepo(agent).Object);
+            mockUow.SetupGet(u => u.TypeDePrets).Returns(StubRepo(type).Object);
+            mockUow.SetupGet(u => u.Demandes).Returns(StubRepo<Demande>(items: new List<Demande> { previous }).Object);
+
+            var service = new DemandeService(mockUow.Object, _mapper);
+            var dto = new CreateDemandeDto { AgentId = 1, TypeDePretId = 1, MontantDemande = 1000, DateDepot = new DateTime(2026, 1, 1) };
+
+            var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () => await service.CreateAsync(dto));
+            Assert.Contains("Franchise non respectée", ex.Message);
+        }
+
+        [Fact]
         public async Task CreateAsync_Rejected_Previous_Demand_Does_Not_Block_Franchise()
         {
             var mockUow = CreateMockUow();
@@ -362,6 +386,37 @@ namespace FondsSocial.Application.Tests
             Assert.True(ok);
             mockDemandes.Verify(m => m.Update(It.IsAny<Demande>()), Times.Once);
             mockUow.Verify(u => u.SaveChangesAsync(), Times.Once);
+        }
+
+        [Fact]
+        public async Task ChangePieceStatusAsync_Writes_Actual_Demande_Status_Not_Hardcoded_AEtude()
+        {
+            // Régression: la méthode écrivait auparavant Statut = AEtude en dur dans l'historique,
+            // quel que soit le statut réel de la demande (elle ne la fait pourtant pas transitionner).
+            // Ici la demande est à Deposee: l'historique doit refléter Deposee, pas AEtude.
+            var mockUow = CreateMockUow();
+
+            var piece = new PieceJustificative { Id = 1, DemandeId = 7, StatutVerification = StatutVerification.EnAttente };
+            var demande = new Demande { Id = 7, StatutCourant = StatutDemande.Deposee };
+
+            mockUow.SetupGet(u => u.PieceJustificatives).Returns(StubRepo(piece).Object);
+            mockUow.SetupGet(u => u.Demandes).Returns(StubRepo(demande).Object);
+
+            HistoriqueStatutDemande? capturedHist = null;
+            var mockHist = new Mock<IRepository<HistoriqueStatutDemande>>();
+            mockHist.Setup(r => r.AddAsync(It.IsAny<HistoriqueStatutDemande>()))
+                .Callback<HistoriqueStatutDemande>(h => capturedHist = h)
+                .Returns(Task.CompletedTask);
+            mockUow.SetupGet(u => u.HistoriqueStatutDemandes).Returns(mockHist.Object);
+            mockUow.Setup(u => u.SaveChangesAsync()).ReturnsAsync(1);
+
+            var service = new DemandeService(mockUow.Object, _mapper);
+
+            var ok = await service.ChangePieceStatusAsync(1, StatutVerification.Conforme, "RH", "ok");
+
+            Assert.True(ok);
+            Assert.NotNull(capturedHist);
+            Assert.Equal(StatutDemande.Deposee, capturedHist!.Statut);
         }
 
         #endregion

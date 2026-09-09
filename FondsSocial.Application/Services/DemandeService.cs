@@ -66,7 +66,12 @@ namespace FondsSocial.Application.Services
 
             if (previous != null)
             {
+                // Nombre de mois PLEINS écoulés: la simple différence (année*12+mois) ignore le
+                // jour du mois et peut compter un mois entier alors qu'un seul jour s'est écoulé
+                // (ex: 31 déc. -> 1er janv.). On retranche 1 tant que le jour du mois n'est pas
+                // encore atteint, pour ne jamais lever la franchise trop tôt.
                 var months = (dto.DateDepot.Year - previous.DateDepot.Year) * 12 + dto.DateDepot.Month - previous.DateDepot.Month;
+                if (dto.DateDepot.Day < previous.DateDepot.Day) months--;
                 if (months < type.FranchiseMois)
                     throw new InvalidOperationException($"Franchise non respectée: il faut attendre {type.FranchiseMois} mois depuis la dernière demande du même type.");
             }
@@ -289,14 +294,20 @@ namespace FondsSocial.Application.Services
         {
             var piece = await _uow.PieceJustificatives.GetByIdAsync(pieceId);
             if (piece == null) return false;
+
+            // Bug d'audit corrigé: cette méthode ne fait pas transitionner la demande, donc
+            // l'historique ne doit pas prétendre qu'elle est passée à AEtude (valeur en dur
+            // précédente) - il doit refléter le statut réel de la demande au moment du contrôle.
+            var demande = await _uow.Demandes.GetByIdAsync(piece.DemandeId);
+            if (demande == null) return false;
+
             piece.StatutVerification = statut;
             _uow.PieceJustificatives.Update(piece);
 
-            // add history entry to demande
             var hist = new HistoriqueStatutDemande
             {
                 DemandeId = piece.DemandeId,
-                Statut = StatutDemande.AEtude,
+                Statut = demande.StatutCourant,
                 DateChangement = DateTime.UtcNow,
                 Auteur = auteur,
                 Commentaire = commentaire
@@ -343,7 +354,11 @@ namespace FondsSocial.Application.Services
             // 4 pts par année d'ancienneté complète
             if (agent.DateTitularisation.HasValue)
             {
+                // Même correction que pour la franchise: compter les mois pleins, pas la simple
+                // différence de mois calendaires, pour ne pas créditer une année d'ancienneté
+                // avant qu'elle ne soit réellement atteinte.
                 var mois = (dateDepot.Year - agent.DateTitularisation.Value.Year) * 12 + dateDepot.Month - agent.DateTitularisation.Value.Month;
+                if (dateDepot.Day < agent.DateTitularisation.Value.Day) mois--;
                 score += 4m * Math.Floor(mois / 12m);
             }
 
