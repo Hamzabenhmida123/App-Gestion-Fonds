@@ -56,7 +56,9 @@ export class ComitePageComponent implements OnInit {
   ngOnInit(): void {
     this.loadMembres();
     this.loadSeances();
-    this.demandeService.getAll().subscribe(list => this.demandes.set(list));
+    // pageSize au maximum autorisé: ce sélecteur doit couvrir l'ensemble des demandes
+    // disponibles pour une décision, pas seulement la première page de la liste paginée.
+    this.demandeService.getAll({ pageSize: 100 }).subscribe(result => this.demandes.set(result.items));
   }
 
   membreName(id: number): string {

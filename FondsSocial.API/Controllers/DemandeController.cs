@@ -29,12 +29,15 @@ namespace FondsSocial.API.Controllers
             _mapper = mapper;
         }
 
-        /// <summary>Liste des demandes avec filtres optionnels</summary>
+        /// <summary>Liste paginée des demandes avec filtres optionnels</summary>
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int? agentId, [FromQuery] StatutDemande? statut, [FromQuery] int? typeDePretId, [FromQuery] DateTime? from, [FromQuery] DateTime? to)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int? agentId, [FromQuery] StatutDemande? statut, [FromQuery] int? typeDePretId,
+            [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+            [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var list = await _service.GetAllFilteredAsync(agentId, statut, typeDePretId, from, to);
-            return Ok(list);
+            var result = await _service.GetAllFilteredAsync(agentId, statut, typeDePretId, from, to, page, pageSize);
+            return Ok(result);
         }
 
         /// <summary>Récupère une demande complète (avec historique et pièces)</summary>

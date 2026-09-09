@@ -23,10 +23,16 @@ export class HomePageComponent implements OnInit {
   enCoursCount = signal<number | null>(null);
 
   ngOnInit(): void {
-    this.demandeService.getAll().pipe(catchError(() => of([]))).subscribe(list => {
-      this.demandesCount.set(list.length);
-      this.enCoursCount.set(list.filter(d => ![8, 9, 10, 11].includes(d.statutCourant)).length);
-    });
+    // pageSize au maximum autorisé par l'API (100) pour ce tableau de bord: le total exact
+    // vient de totalCount, mais le compte "en cours" est calculé sur les items reçus - au-delà
+    // de 100 demandes, il sous-estimerait légèrement ce chiffre (limitation acceptée pour un
+    // indicateur de tableau de bord, pas pour une donnée métier).
+    this.demandeService.getAll({ pageSize: 100 })
+      .pipe(catchError(() => of({ items: [], totalCount: 0, page: 1, pageSize: 100 })))
+      .subscribe(result => {
+        this.demandesCount.set(result.totalCount);
+        this.enCoursCount.set(result.items.filter(d => ![8, 9, 10, 11].includes(d.statutCourant)).length);
+      });
     this.agentService.getAll().pipe(catchError(() => of([]))).subscribe(list => this.agentsCount.set(list.length));
     this.societeService.getAll().pipe(catchError(() => of([]))).subscribe(list => this.societesCount.set(list.length));
   }

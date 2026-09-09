@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -25,6 +25,11 @@ export class DemandeListComponent implements OnInit {
   agents = signal<Agent[]>([]);
   types = signal<TypeDePret[]>([]);
   loading = signal(false);
+
+  readonly pageSize = 20;
+  page = signal(1);
+  totalCount = signal(0);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
   statutOptions = enumOptions(STATUT_DEMANDE_LABELS);
 
@@ -57,6 +62,12 @@ export class DemandeListComponent implements OnInit {
     return this.types().find(t => t.id === id)?.libelle ?? `#${id}`;
   }
 
+  /** Rechargement suite à un changement de filtre: on repart de la page 1. */
+  applyFilters(): void {
+    this.page.set(1);
+    this.load();
+  }
+
   load(): void {
     this.loading.set(true);
     this.service.getAll({
@@ -64,11 +75,29 @@ export class DemandeListComponent implements OnInit {
       statut: this.filterStatut ?? undefined,
       typeDePretId: this.filterTypeId ?? undefined,
       from: this.filterFrom || undefined,
-      to: this.filterTo || undefined
+      to: this.filterTo || undefined,
+      page: this.page(),
+      pageSize: this.pageSize
     }).subscribe({
-      next: list => { this.demandes.set(list); this.loading.set(false); },
+      next: result => {
+        this.demandes.set(result.items);
+        this.totalCount.set(result.totalCount);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
+  }
+
+  previousPage(): void {
+    if (this.page() <= 1) return;
+    this.page.update(p => p - 1);
+    this.load();
+  }
+
+  nextPage(): void {
+    if (this.page() >= this.totalPages()) return;
+    this.page.update(p => p + 1);
+    this.load();
   }
 
   resetFilters(): void {
@@ -77,6 +106,6 @@ export class DemandeListComponent implements OnInit {
     this.filterTypeId = null;
     this.filterFrom = '';
     this.filterTo = '';
-    this.load();
+    this.applyFilters();
   }
 }

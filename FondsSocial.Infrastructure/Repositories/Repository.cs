@@ -50,5 +50,22 @@ namespace FondsSocial.Infrastructure.Repositories
         {
             _dbSet.Update(entity);
         }
+
+        public virtual async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedAsync(
+            int page,
+            int pageSize,
+            Expression<Func<T, bool>>? filter = null,
+            Func<IQueryable<T>, IOrderedQueryable<T>>? orderBy = null)
+        {
+            IQueryable<T> query = _dbSet;
+            if (filter != null) query = query.Where(filter);
+
+            var totalCount = await query.CountAsync();
+
+            query = orderBy != null ? orderBy(query) : query.OrderBy(e => e.Id);
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return (items, totalCount);
+        }
     }
 }

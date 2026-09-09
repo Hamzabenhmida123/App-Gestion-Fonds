@@ -9,7 +9,7 @@
     <div class="form-grid">
       <div class="field">
         <label for="filter-agent">Agent</label>
-        <select id="filter-agent" [(ngModel)]="filterAgentId" (ngModelChange)="load()">
+        <select id="filter-agent" [(ngModel)]="filterAgentId" (ngModelChange)="applyFilters()">
           <option [ngValue]="null">Tous</option>
           @for (a of agents(); track a.id) {
             <option [ngValue]="a.id">{{ a.prenom }} {{ a.nom }}</option>
@@ -18,7 +18,7 @@
       </div>
       <div class="field">
         <label for="filter-statut">Statut</label>
-        <select id="filter-statut" [(ngModel)]="filterStatut" (ngModelChange)="load()">
+        <select id="filter-statut" [(ngModel)]="filterStatut" (ngModelChange)="applyFilters()">
           <option [ngValue]="null">Tous</option>
           @for (o of statutOptions; track o.value) {
             <option [ngValue]="o.value">{{ o.label }}</option>
@@ -27,7 +27,7 @@
       </div>
       <div class="field">
         <label for="filter-type">Type de prêt</label>
-        <select id="filter-type" [(ngModel)]="filterTypeId" (ngModelChange)="load()">
+        <select id="filter-type" [(ngModel)]="filterTypeId" (ngModelChange)="applyFilters()">
           <option [ngValue]="null">Tous</option>
           @for (t of types(); track t.id) {
             <option [ngValue]="t.id">{{ t.libelle }}</option>
@@ -36,11 +36,11 @@
       </div>
       <div class="field">
         <label for="filter-from">Du</label>
-        <input id="filter-from" type="date" [(ngModel)]="filterFrom" (ngModelChange)="load()" />
+        <input id="filter-from" type="date" [(ngModel)]="filterFrom" (ngModelChange)="applyFilters()" />
       </div>
       <div class="field">
         <label for="filter-to">Au</label>
-        <input id="filter-to" type="date" [(ngModel)]="filterTo" (ngModelChange)="load()" />
+        <input id="filter-to" type="date" [(ngModel)]="filterTo" (ngModelChange)="applyFilters()" />
       </div>
     </div>
     <button type="button" class="btn btn-ghost" (click)="resetFilters()">Réinitialiser</button>
@@ -78,5 +78,15 @@
         }
       </tbody>
     </table>
+  </div>
+
+  <div class="page-header" style="margin-top: var(--spacing-4); margin-bottom: 0;">
+    <span class="muted">
+      {{ totalCount() }} demande(s) · page {{ page() }} / {{ totalPages() }}
+    </span>
+    <div style="display:flex; gap: 8px;">
+      <button type="button" class="btn btn-ghost" [disabled]="page() <= 1" (click)="previousPage()">&laquo; Précédent</button>
+      <button type="button" class="btn btn-ghost" [disabled]="page() >= totalPages()" (click)="nextPage()">Suivant &raquo;</button>
+    </div>
   </div>
 </div>

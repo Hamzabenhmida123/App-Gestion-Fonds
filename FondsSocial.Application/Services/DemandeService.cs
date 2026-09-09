@@ -192,17 +192,31 @@ namespace FondsSocial.Application.Services
             return dto;
         }
 
-        public async Task<IEnumerable<DemandeDto>> GetAllFilteredAsync(int? agentId, StatutDemande? statut, int? typeDePretId, DateTime? from, DateTime? to)
+        public async Task<PagedResult<DemandeDto>> GetAllFilteredAsync(int? agentId, StatutDemande? statut, int? typeDePretId, DateTime? from, DateTime? to, int page, int pageSize)
         {
-            var list = await _uow.Demandes.GetAllAsync();
-            var q = list.AsQueryable();
-            if (agentId.HasValue) q = q.Where(d => d.AgentId == agentId.Value);
-            if (statut.HasValue) q = q.Where(d => d.StatutCourant == statut.Value);
-            if (typeDePretId.HasValue) q = q.Where(d => d.TypeDePretId == typeDePretId.Value);
-            if (from.HasValue) q = q.Where(d => d.DateDepot >= from.Value);
-            if (to.HasValue) q = q.Where(d => d.DateDepot <= to.Value);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
 
-            return _mapper.Map<IEnumerable<DemandeDto>>(q.OrderByDescending(d => d.DateDepot));
+            // Filtrage et pagination exécutés en SQL (WHERE + COUNT + Skip/Take), au lieu de
+            // charger la table Demandes entière puis filtrer en mémoire comme précédemment.
+            System.Linq.Expressions.Expression<Func<Demande, bool>> filter = d =>
+                (!agentId.HasValue || d.AgentId == agentId.Value) &&
+                (!statut.HasValue || d.StatutCourant == statut.Value) &&
+                (!typeDePretId.HasValue || d.TypeDePretId == typeDePretId.Value) &&
+                (!from.HasValue || d.DateDepot >= from.Value) &&
+                (!to.HasValue || d.DateDepot <= to.Value);
+
+            var (items, totalCount) = await _uow.Demandes.GetPagedAsync(
+                page, pageSize, filter, q => q.OrderByDescending(d => d.DateDepot));
+
+            return new PagedResult<DemandeDto>
+            {
+                Items = _mapper.Map<IEnumerable<DemandeDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<IEnumerable<string>> AddPieceRecordAsync(CreatePieceJustificativeDto dto)

@@ -10,7 +10,10 @@ namespace FondsSocial.Application.Services
     {
         Task<DemandeDto> CreateAsync(CreateDemandeDto dto);
         Task<DemandeDto?> GetByIdWithDetailsAsync(int id);
-        Task<IEnumerable<DemandeDto>> GetAllFilteredAsync(int? agentId, StatutDemande? statut, int? typeDePretId, DateTime? from, DateTime? to);
+        /// <summary>
+        /// Liste paginée et filtrée côté SQL (WHERE + Skip/Take exécutés par la base).
+        /// </summary>
+        Task<PagedResult<DemandeDto>> GetAllFilteredAsync(int? agentId, StatutDemande? statut, int? typeDePretId, DateTime? from, DateTime? to, int page, int pageSize);
         Task<IEnumerable<string>> AddPieceRecordAsync(CreatePieceJustificativeDto dto);
         Task<PieceJustificativeDto?> GetPieceByIdAsync(int pieceId);
         Task<bool> ChangePieceStatusAsync(int pieceId, StatutVerification statut, string auteur, string commentaire);

@@ -4,20 +4,23 @@ import { Observable } from 'rxjs';
 import { API_BASE_URL } from '../config/app-config';
 import { StatutVerification } from '../models/enums';
 import { CreateDemande, Demande, DemandeFilters, UploadPieceResult } from '../models/demande.model';
+import { PagedResult } from '../models/pagination.model';
 
 @Injectable({ providedIn: 'root' })
 export class DemandeService {
   private http = inject(HttpClient);
   private url = `${API_BASE_URL}/Demande`;
 
-  getAll(filters: DemandeFilters = {}): Observable<Demande[]> {
+  getAll(filters: DemandeFilters = {}): Observable<PagedResult<Demande>> {
     let params = new HttpParams();
     if (filters.agentId != null) params = params.set('agentId', filters.agentId);
     if (filters.statut != null) params = params.set('statut', filters.statut);
     if (filters.typeDePretId != null) params = params.set('typeDePretId', filters.typeDePretId);
     if (filters.from) params = params.set('from', filters.from);
     if (filters.to) params = params.set('to', filters.to);
-    return this.http.get<Demande[]>(this.url, { params });
+    params = params.set('page', filters.page ?? 1);
+    params = params.set('pageSize', filters.pageSize ?? 20);
+    return this.http.get<PagedResult<Demande>>(this.url, { params });
   }
 
   getById(id: number): Observable<Demande> {

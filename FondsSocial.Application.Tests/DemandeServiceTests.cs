@@ -240,6 +240,51 @@ namespace FondsSocial.Application.Tests
             Assert.NotNull(result);
         }
 
+        [Fact]
+        public async Task GetAllFilteredAsync_Filters_And_Paginates_At_The_Repository_Level()
+        {
+            // Vérifie que le filtre (agentId) est bien appliqué et que la pagination (page,
+            // pageSize, tri décroissant par DateDepot) renvoie la bonne page et le bon total,
+            // en simulant ce que ferait réellement la base (Where + Count + OrderBy + Skip/Take)
+            // plutôt que de se contenter d'un mock trivial.
+            var mockUow = CreateMockUow();
+
+            var demandes = new List<Demande>
+            {
+                new Demande { Id = 1, AgentId = 1, DateDepot = new DateTime(2026, 1, 1) },
+                new Demande { Id = 2, AgentId = 1, DateDepot = new DateTime(2026, 2, 1) },
+                new Demande { Id = 3, AgentId = 2, DateDepot = new DateTime(2026, 3, 1) },
+                new Demande { Id = 4, AgentId = 1, DateDepot = new DateTime(2026, 4, 1) },
+            };
+
+            var mockDemandes = new Mock<IRepository<Demande>>();
+            mockDemandes
+                .Setup(r => r.GetPagedAsync(
+                    It.IsAny<int>(), It.IsAny<int>(),
+                    It.IsAny<Expression<Func<Demande, bool>>>(),
+                    It.IsAny<Func<IQueryable<Demande>, IOrderedQueryable<Demande>>>()))
+                .ReturnsAsync((int page, int pageSize, Expression<Func<Demande, bool>> filter, Func<IQueryable<Demande>, IOrderedQueryable<Demande>> orderBy) =>
+                {
+                    IQueryable<Demande> query = demandes.AsQueryable();
+                    if (filter != null) query = query.Where(filter);
+                    var total = query.Count();
+                    if (orderBy != null) query = orderBy(query);
+                    var items = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+                    return ((IEnumerable<Demande>)items, total);
+                });
+            mockUow.SetupGet(u => u.Demandes).Returns(mockDemandes.Object);
+
+            var service = new DemandeService(mockUow.Object, _mapper);
+
+            var result = await service.GetAllFilteredAsync(agentId: 1, statut: null, typeDePretId: null, from: null, to: null, page: 1, pageSize: 2);
+
+            Assert.Equal(3, result.TotalCount); // agent 1 a 3 demandes au total
+            Assert.Equal(2, result.Items.Count()); // pageSize = 2
+            Assert.Equal(1, result.Page);
+            Assert.Equal(2, result.PageSize);
+            Assert.Equal(4, result.Items.First().Id); // la plus récente (avril) en premier
+        }
+
         #region Clôture du dépôt
 
         [Fact]

@@ -56,6 +56,8 @@ export interface DemandeFilters {
   typeDePretId?: number;
   from?: string;
   to?: string;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface UploadPieceResult {
