@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { API_BASE_URL } from '../../core/config/app-config';
 import { DemandeService } from '../../core/services/demande.service';
 import { AgentService } from '../../core/services/agent.service';
 import { TypeDePretService } from '../../core/services/type-de-pret.service';
@@ -136,6 +137,10 @@ export class DemandeDetailComponent implements OnInit {
       },
       error: err => this.uploadError.set(err.message)
     });
+  }
+
+  pieceFileUrl(pieceId: number): string {
+    return `${API_BASE_URL}/Demande/pieces/${pieceId}/file`;
   }
 
   changePieceStatus(pieceId: number, statut: StatutVerification): void {

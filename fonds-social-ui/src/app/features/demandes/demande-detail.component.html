@@ -95,6 +95,7 @@
                 <td>{{ p.dateDepot | slice:0:10 }}</td>
                 <td><app-status-badge [label]="verificationLabels[p.statutVerification]" [color]="verificationColors[p.statutVerification]"></app-status-badge></td>
                 <td style="display:flex; gap: 8px;">
+                  <a [href]="pieceFileUrl(p.id)" target="_blank" rel="noopener" class="btn btn-ghost">Télécharger</a>
                   <button type="button" class="btn btn-validate" (click)="changePieceStatus(p.id, 1)">Conforme</button>
                   <button type="button" class="btn btn-secondary" (click)="changePieceStatus(p.id, 2)">Non conforme</button>
                 </td>
