@@ -3,11 +3,15 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using FondsSocial.Application.DTOs;
-using FondsSocial.Domain.Entities;
 using FondsSocial.Infrastructure.UnitOfWork;
 
 namespace FondsSocial.API.Controllers
 {
+    /// <summary>
+    /// Lecture seule: l'historique des statuts ne doit être alimenté que par DemandeService
+    /// (transitions, clôture de dépôt, etc.), jamais par écriture directe d'un client, qui
+    /// permettrait de forger un historique déconnecté de l'état réel de la demande.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class HistoriqueStatutDemandeController : ControllerBase
@@ -34,36 +38,6 @@ namespace FondsSocial.API.Controllers
             var e = await _uow.HistoriqueStatutDemandes.GetByIdAsync(id);
             if (e == null) return NotFound();
             return Ok(_mapper.Map<HistoriqueStatutDemandeDto>(e));
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateHistoriqueStatutDemandeDto dto)
-        {
-            var entity = _mapper.Map<HistoriqueStatutDemande>(dto);
-            await _uow.HistoriqueStatutDemandes.AddAsync(entity);
-            await _uow.SaveChangesAsync();
-            return CreatedAtAction(nameof(Get), new { id = entity.Id }, _mapper.Map<HistoriqueStatutDemandeDto>(entity));
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] UpdateHistoriqueStatutDemandeDto dto)
-        {
-            var existing = await _uow.HistoriqueStatutDemandes.GetByIdAsync(id);
-            if (existing == null) return NotFound();
-            _mapper.Map(dto, existing);
-            _uow.HistoriqueStatutDemandes.Update(existing);
-            await _uow.SaveChangesAsync();
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            var existing = await _uow.HistoriqueStatutDemandes.GetByIdAsync(id);
-            if (existing == null) return NotFound();
-            _uow.HistoriqueStatutDemandes.Delete(existing);
-            await _uow.SaveChangesAsync();
-            return NoContent();
         }
     }
 }

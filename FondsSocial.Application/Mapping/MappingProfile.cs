@@ -32,10 +32,6 @@ namespace FondsSocial.Application.Mapping
             CreateMap<PieceJustificative, PieceJustificativeDto>().ReverseMap();
             CreateMap<Decision, DecisionDto>().ReverseMap();
 
-            CreateMap<HistoriqueStatutDemande, HistoriqueStatutDemandeDto>().ReverseMap();
-            CreateMap<CreateHistoriqueStatutDemandeDto, HistoriqueStatutDemande>();
-            CreateMap<UpdateHistoriqueStatutDemandeDto, HistoriqueStatutDemande>();
-
             CreateMap<PieceJustificative, PieceJustificativeDto>().ReverseMap();
             CreateMap<CreatePieceJustificativeDto, PieceJustificative>();
             CreateMap<UpdatePieceJustificativeDto, PieceJustificative>();

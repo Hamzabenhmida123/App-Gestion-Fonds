@@ -19,6 +19,9 @@ namespace FondsSocial.Application
             services.AddScoped<Services.ITypeDePretService, Services.TypeDePretService>();
             services.AddScoped<Services.IAgentService, Services.AgentService>();
             services.AddScoped<Services.IDemandeService, Services.DemandeService>();
+            services.AddScoped<Services.IDecisionService, Services.DecisionService>();
+            services.AddScoped<Services.IContratService, Services.ContratService>();
+            services.AddScoped<Services.IEcheanceService, Services.EcheanceService>();
 
             return services;
         }
