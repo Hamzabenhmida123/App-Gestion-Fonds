@@ -13,6 +13,22 @@
       </div>
     </div>
 
+    <div class="card">
+      <h3>Auteur des actions</h3>
+      <p class="muted">
+        Cette identité est utilisée pour tracer les actions ci-dessous (transition, clôture,
+        vérification des pièces) tant que le module de gestion des accès n'est pas intégré.
+        Elle est mémorisée sur cet appareil.
+      </p>
+      @if (auteurError()) {
+        <div class="error-banner">{{ auteurError() }}</div>
+      }
+      <div class="field" style="margin-bottom: 0; max-width: 320px;">
+        <label for="current-auteur">Auteur (vous)</label>
+        <input id="current-auteur" [(ngModel)]="auteurInput" placeholder="Ex: RH - Nom Prénom" />
+      </div>
+    </div>
+
     <div class="form-grid">
       <div class="card">
         <h3>Informations</h3>
@@ -38,10 +54,6 @@
             </select>
           </div>
           <div class="field">
-            <label for="transition-auteur">Auteur</label>
-            <input id="transition-auteur" [(ngModel)]="transitionAuteur" placeholder="Ex: RH" />
-          </div>
-          <div class="field">
             <label for="transition-commentaire">Commentaire</label>
             <input id="transition-commentaire" [(ngModel)]="transitionCommentaire" />
           </div>
@@ -59,15 +71,9 @@
         @if (cloturerError()) {
           <div class="error-banner">{{ cloturerError() }}</div>
         }
-        <div class="form-grid">
-          <div class="field">
-            <label for="cloturer-auteur">Auteur</label>
-            <input id="cloturer-auteur" [(ngModel)]="cloturerAuteur" placeholder="Ex: RH" />
-          </div>
-          <div class="field">
-            <label for="cloturer-commentaire">Commentaire</label>
-            <input id="cloturer-commentaire" [(ngModel)]="cloturerCommentaire" />
-          </div>
+        <div class="field">
+          <label for="cloturer-commentaire">Commentaire</label>
+          <input id="cloturer-commentaire" [(ngModel)]="cloturerCommentaire" />
         </div>
         <button type="button" class="btn btn-validate" (click)="submitCloturerDepot()">Clôturer le dépôt</button>
       </div>

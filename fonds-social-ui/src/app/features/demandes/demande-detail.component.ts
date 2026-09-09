@@ -15,6 +15,7 @@ import {
 } from '../../core/models/enums';
 import { StatusBadgeComponent } from '../../shared/ui/status-badge/status-badge.component';
 import { NotificationService } from '../../core/services/notification.service';
+import { CurrentUserService } from '../../core/services/current-user.service';
 
 @Component({
   selector: 'app-demande-detail',
@@ -28,18 +29,22 @@ export class DemandeDetailComponent implements OnInit {
   private agentService = inject(AgentService);
   private typeService = inject(TypeDePretService);
   private notifications = inject(NotificationService);
+  private currentUser = inject(CurrentUserService);
 
   demande = signal<Demande | null>(null);
   agent = signal<Agent | null>(null);
   type = signal<TypeDePret | null>(null);
   loading = signal(false);
 
-  cloturerAuteur = '';
+  // Auteur partagé, saisi une fois et persisté (voir CurrentUserService) plutôt que
+  // répété/retapé pour chaque action, ou saisi via un prompt() natif pour les pièces.
+  auteurInput = this.currentUser.auteur();
+  auteurError = signal<string | null>(null);
+
   cloturerCommentaire = '';
   cloturerError = signal<string | null>(null);
 
   transitionTarget: StatutDemande | null = null;
-  transitionAuteur = '';
   transitionCommentaire = '';
   transitionError = signal<string | null>(null);
 
@@ -84,16 +89,28 @@ export class DemandeDetailComponent implements OnInit {
     return STATUT_DEMANDE_TRANSITIONS[d.statutCourant] ?? [];
   }
 
+  /** Valide l'auteur partagé, le persiste pour les prochaines actions, ou signale l'erreur. */
+  private resolveAuteur(): string | null {
+    const value = this.auteurInput.trim();
+    if (!value) {
+      this.auteurError.set('Veuillez renseigner votre nom (auteur de l\'action) avant de continuer.');
+      return null;
+    }
+    this.auteurError.set(null);
+    this.currentUser.setAuteur(value);
+    return value;
+  }
+
   submitTransition(): void {
     const d = this.demande();
-    if (!d || this.transitionTarget == null || !this.transitionAuteur.trim()) return;
+    const auteur = this.resolveAuteur();
+    if (!d || this.transitionTarget == null || !auteur) return;
     this.transitionError.set(null);
-    this.service.transition(d.id, this.transitionTarget, this.transitionAuteur.trim(), this.transitionCommentaire.trim() || undefined)
+    this.service.transition(d.id, this.transitionTarget, auteur, this.transitionCommentaire.trim() || undefined)
       .subscribe({
         next: () => {
           this.notifications.success('Transition effectuée.');
           this.transitionTarget = null;
-          this.transitionAuteur = '';
           this.transitionCommentaire = '';
           this.reload();
         },
@@ -103,13 +120,13 @@ export class DemandeDetailComponent implements OnInit {
 
   submitCloturerDepot(): void {
     const d = this.demande();
-    if (!d || !this.cloturerAuteur.trim()) return;
+    const auteur = this.resolveAuteur();
+    if (!d || !auteur) return;
     this.cloturerError.set(null);
-    this.service.cloturerDepot(d.id, this.cloturerAuteur.trim(), this.cloturerCommentaire.trim() || undefined)
+    this.service.cloturerDepot(d.id, auteur, this.cloturerCommentaire.trim() || undefined)
       .subscribe({
         next: () => {
           this.notifications.success('Dépôt clôturé, demande enregistrée.');
-          this.cloturerAuteur = '';
           this.cloturerCommentaire = '';
           this.reload();
         },
@@ -144,7 +161,7 @@ export class DemandeDetailComponent implements OnInit {
   }
 
   changePieceStatus(pieceId: number, statut: StatutVerification): void {
-    const auteur = prompt('Auteur du contrôle ?');
+    const auteur = this.resolveAuteur();
     if (!auteur) return;
     this.service.changePieceStatus(pieceId, statut, auteur).subscribe({
       next: () => { this.notifications.success('Statut de la pièce mis à jour.'); this.reload(); }
