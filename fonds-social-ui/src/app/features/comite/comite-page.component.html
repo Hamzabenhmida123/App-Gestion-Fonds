@@ -14,12 +14,12 @@
       <div class="card">
         <h3>{{ membreEditingId() ? 'Modifier le membre' : 'Nouveau membre' }}</h3>
         <div class="form-grid">
-          <div class="field"><label>Nom</label><input [(ngModel)]="membreForm.nom" /></div>
-          <div class="field"><label>Prénom</label><input [(ngModel)]="membreForm.prenom" /></div>
-          <div class="field"><label>Fonction</label><input [(ngModel)]="membreForm.fonction" /></div>
+          <div class="field"><label for="membre-nom">Nom</label><input id="membre-nom" [(ngModel)]="membreForm.nom" /></div>
+          <div class="field"><label for="membre-prenom">Prénom</label><input id="membre-prenom" [(ngModel)]="membreForm.prenom" /></div>
+          <div class="field"><label for="membre-fonction">Fonction</label><input id="membre-fonction" [(ngModel)]="membreForm.fonction" /></div>
           <div class="field">
-            <label>Actif</label>
-            <select [(ngModel)]="membreForm.actif">
+            <label for="membre-actif">Actif</label>
+            <select id="membre-actif" [(ngModel)]="membreForm.actif">
               <option [ngValue]="true">Oui</option>
               <option [ngValue]="false">Non</option>
             </select>
@@ -61,17 +61,17 @@
       <div class="card">
         <h3>{{ seanceEditingId() ? 'Modifier la séance' : 'Nouvelle séance' }}</h3>
         <div class="form-grid">
-          <div class="field"><label>Date</label><input type="date" [(ngModel)]="seanceForm.date" /></div>
+          <div class="field"><label for="seance-date">Date</label><input id="seance-date" type="date" [(ngModel)]="seanceForm.date" /></div>
           <div class="field">
-            <label>Statut visa/signature</label>
-            <select [(ngModel)]="seanceForm.statutVisaSignature">
+            <label for="seance-statutVisa">Statut visa/signature</label>
+            <select id="seance-statutVisa" [(ngModel)]="seanceForm.statutVisaSignature">
               @for (o of statutVisaOptions; track o.value) {
                 <option [ngValue]="o.value">{{ o.label }}</option>
               }
             </select>
           </div>
         </div>
-        <div class="field"><label>Procès-verbal</label><textarea [(ngModel)]="seanceForm.procesVerbal"></textarea></div>
+        <div class="field"><label for="seance-procesVerbal">Procès-verbal</label><textarea id="seance-procesVerbal" [(ngModel)]="seanceForm.procesVerbal"></textarea></div>
         <div style="display:flex; gap: 8px;">
           <button type="button" class="btn btn-ghost" (click)="cancelSeance()">Annuler</button>
           <button type="button" class="btn btn-validate" (click)="saveSeance()">Enregistrer</button>
@@ -117,8 +117,8 @@
                       </div>
                       <div class="form-grid">
                         <div class="field">
-                          <label>Membre</label>
-                          <select [(ngModel)]="newParticipation.membreComiteId">
+                          <label for="participation-membre">Membre</label>
+                          <select id="participation-membre" [(ngModel)]="newParticipation.membreComiteId">
                             <option [ngValue]="0" disabled>Choisir</option>
                             @for (m of membres(); track m.id) {
                               <option [ngValue]="m.id">{{ m.prenom }} {{ m.nom }}</option>
@@ -126,8 +126,8 @@
                           </select>
                         </div>
                         <div class="field">
-                          <label>A visé</label>
-                          <select [(ngModel)]="newParticipation.aVise">
+                          <label for="participation-avise">A visé</label>
+                          <select id="participation-avise" [(ngModel)]="newParticipation.aVise">
                             <option [ngValue]="true">Oui</option>
                             <option [ngValue]="false">Non</option>
                           </select>
@@ -156,8 +156,8 @@
                       </div>
                       <div class="form-grid">
                         <div class="field">
-                          <label>Demande</label>
-                          <select [(ngModel)]="newDecision.demandeId">
+                          <label for="decision-demande">Demande</label>
+                          <select id="decision-demande" [(ngModel)]="newDecision.demandeId">
                             <option [ngValue]="0" disabled>Choisir</option>
                             @for (d of demandes(); track d.id) {
                               <option [ngValue]="d.id">{{ d.numeroDossier }}</option>
@@ -165,16 +165,16 @@
                           </select>
                         </div>
                         <div class="field">
-                          <label>Sens</label>
-                          <select [(ngModel)]="newDecision.sensDecision">
+                          <label for="decision-sens">Sens</label>
+                          <select id="decision-sens" [(ngModel)]="newDecision.sensDecision">
                             @for (o of sensOptions; track o.value) {
                               <option [ngValue]="o.value">{{ o.label }}</option>
                             }
                           </select>
                         </div>
                         <div class="field">
-                          <label>Montant accordé</label>
-                          <input type="number" min="0" step="0.01" [(ngModel)]="newDecision.montantAccorde" />
+                          <label for="decision-montant">Montant accordé</label>
+                          <input id="decision-montant" type="number" min="0" step="0.01" [(ngModel)]="newDecision.montantAccorde" />
                         </div>
                       </div>
                       <button type="button" class="btn btn-primary" (click)="addDecision()">Enregistrer la décision</button>

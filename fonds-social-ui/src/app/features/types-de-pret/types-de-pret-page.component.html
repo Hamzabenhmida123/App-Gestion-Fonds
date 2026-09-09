@@ -127,12 +127,12 @@
                   </div>
                   <div style="display:flex; gap: 8px; align-items: flex-end;">
                     <div class="field" style="margin-bottom: 0; flex: 1;">
-                      <label>Libellé de la pièce</label>
-                      <input [(ngModel)]="newPieceLabel" [ngModelOptions]="{standalone: true}" placeholder="Ex: CIN" />
+                      <label for="newPieceLabel">Libellé de la pièce</label>
+                      <input id="newPieceLabel" [(ngModel)]="newPieceLabel" [ngModelOptions]="{standalone: true}" placeholder="Ex: CIN" />
                     </div>
                     <div class="field" style="margin-bottom: 0;">
-                      <label>Obligatoire</label>
-                      <select [(ngModel)]="newPieceObligatoire" [ngModelOptions]="{standalone: true}">
+                      <label for="newPieceObligatoire">Obligatoire</label>
+                      <select id="newPieceObligatoire" [(ngModel)]="newPieceObligatoire" [ngModelOptions]="{standalone: true}">
                         <option [ngValue]="true">Oui</option>
                         <option [ngValue]="false">Non</option>
                       </select>

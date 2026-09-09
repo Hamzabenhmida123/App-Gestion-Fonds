@@ -8,8 +8,8 @@
     <h3>Filtres</h3>
     <div class="form-grid">
       <div class="field">
-        <label>Agent</label>
-        <select [(ngModel)]="filterAgentId" (ngModelChange)="load()">
+        <label for="filter-agent">Agent</label>
+        <select id="filter-agent" [(ngModel)]="filterAgentId" (ngModelChange)="load()">
           <option [ngValue]="null">Tous</option>
           @for (a of agents(); track a.id) {
             <option [ngValue]="a.id">{{ a.prenom }} {{ a.nom }}</option>
@@ -17,8 +17,8 @@
         </select>
       </div>
       <div class="field">
-        <label>Statut</label>
-        <select [(ngModel)]="filterStatut" (ngModelChange)="load()">
+        <label for="filter-statut">Statut</label>
+        <select id="filter-statut" [(ngModel)]="filterStatut" (ngModelChange)="load()">
           <option [ngValue]="null">Tous</option>
           @for (o of statutOptions; track o.value) {
             <option [ngValue]="o.value">{{ o.label }}</option>
@@ -26,8 +26,8 @@
         </select>
       </div>
       <div class="field">
-        <label>Type de prêt</label>
-        <select [(ngModel)]="filterTypeId" (ngModelChange)="load()">
+        <label for="filter-type">Type de prêt</label>
+        <select id="filter-type" [(ngModel)]="filterTypeId" (ngModelChange)="load()">
           <option [ngValue]="null">Tous</option>
           @for (t of types(); track t.id) {
             <option [ngValue]="t.id">{{ t.libelle }}</option>
@@ -35,12 +35,12 @@
         </select>
       </div>
       <div class="field">
-        <label>Du</label>
-        <input type="date" [(ngModel)]="filterFrom" (ngModelChange)="load()" />
+        <label for="filter-from">Du</label>
+        <input id="filter-from" type="date" [(ngModel)]="filterFrom" (ngModelChange)="load()" />
       </div>
       <div class="field">
-        <label>Au</label>
-        <input type="date" [(ngModel)]="filterTo" (ngModelChange)="load()" />
+        <label for="filter-to">Au</label>
+        <input id="filter-to" type="date" [(ngModel)]="filterTo" (ngModelChange)="load()" />
       </div>
     </div>
     <button type="button" class="btn btn-ghost" (click)="resetFilters()">Réinitialiser</button>

@@ -15,20 +15,20 @@
         <h3>{{ contratEditingId() ? 'Modifier le contrat' : 'Nouveau contrat' }}</h3>
         <div class="form-grid">
           <div class="field">
-            <label>Décision</label>
-            <select [(ngModel)]="contratForm.decisionId">
+            <label for="contrat-decision">Décision</label>
+            <select id="contrat-decision" [(ngModel)]="contratForm.decisionId">
               <option [ngValue]="0" disabled>Choisir</option>
               @for (d of decisions(); track d.id) {
                 <option [ngValue]="d.id">{{ decisionLabel(d.id) }}</option>
               }
             </select>
           </div>
-          <div class="field"><label>Date de signature</label><input type="date" [(ngModel)]="contratForm.dateSignature" /></div>
-          <div class="field"><label>Montant principal</label><input type="number" min="0" step="0.01" [(ngModel)]="contratForm.montantPrincipal" /></div>
-          <div class="field"><label>Frais de gestion</label><input type="number" min="0" step="0.01" [(ngModel)]="contratForm.fraisGestion" /></div>
-          <div class="field"><label>Montant total</label><input type="number" min="0" step="0.01" [(ngModel)]="contratForm.montantTotal" /></div>
-          <div class="field"><label>Durée (mois)</label><input type="number" min="1" [(ngModel)]="contratForm.dureeMois" /></div>
-          <div class="field"><label>Date première échéance</label><input type="date" [(ngModel)]="contratForm.datePremiereEcheance" /></div>
+          <div class="field"><label for="contrat-dateSignature">Date de signature</label><input id="contrat-dateSignature" type="date" [(ngModel)]="contratForm.dateSignature" /></div>
+          <div class="field"><label for="contrat-montantPrincipal">Montant principal</label><input id="contrat-montantPrincipal" type="number" min="0" step="0.01" [(ngModel)]="contratForm.montantPrincipal" /></div>
+          <div class="field"><label for="contrat-fraisGestion">Frais de gestion</label><input id="contrat-fraisGestion" type="number" min="0" step="0.01" [(ngModel)]="contratForm.fraisGestion" /></div>
+          <div class="field"><label for="contrat-montantTotal">Montant total</label><input id="contrat-montantTotal" type="number" min="0" step="0.01" [(ngModel)]="contratForm.montantTotal" /></div>
+          <div class="field"><label for="contrat-dureeMois">Durée (mois)</label><input id="contrat-dureeMois" type="number" min="1" [(ngModel)]="contratForm.dureeMois" /></div>
+          <div class="field"><label for="contrat-datePremiereEcheance">Date première échéance</label><input id="contrat-datePremiereEcheance" type="date" [(ngModel)]="contratForm.datePremiereEcheance" /></div>
         </div>
         <div style="display:flex; gap: 8px;">
           <button type="button" class="btn btn-ghost" (click)="cancelContrat()">Annuler</button>
@@ -61,34 +61,34 @@
                     <h3>Garantie</h3>
                     <div class="form-grid">
                       <div class="field">
-                        <label>Assurance vie souscrite</label>
-                        <select [(ngModel)]="garantieForm.assuranceVieSouscrite">
+                        <label for="garantie-assuranceVie">Assurance vie souscrite</label>
+                        <select id="garantie-assuranceVie" [(ngModel)]="garantieForm.assuranceVieSouscrite">
                           <option [ngValue]="true">Oui</option><option [ngValue]="false">Non</option>
                         </select>
                       </div>
-                      <div class="field"><label>Date assurance vie</label><input type="date" [(ngModel)]="garantieForm.dateAssuranceVie" /></div>
-                      <div class="field"><label>Référence police</label><input [(ngModel)]="garantieForm.referencePoliceAssurance" /></div>
+                      <div class="field"><label for="garantie-dateAssuranceVie">Date assurance vie</label><input id="garantie-dateAssuranceVie" type="date" [(ngModel)]="garantieForm.dateAssuranceVie" /></div>
+                      <div class="field"><label for="garantie-referencePolice">Référence police</label><input id="garantie-referencePolice" [(ngModel)]="garantieForm.referencePoliceAssurance" /></div>
                       <div class="field">
-                        <label>Traite signée légalisée</label>
-                        <select [(ngModel)]="garantieForm.traiteSigneeLegalisee">
+                        <label for="garantie-traiteSignee">Traite signée légalisée</label>
+                        <select id="garantie-traiteSignee" [(ngModel)]="garantieForm.traiteSigneeLegalisee">
                           <option [ngValue]="true">Oui</option><option [ngValue]="false">Non</option>
                         </select>
                       </div>
-                      <div class="field"><label>Date traite</label><input type="date" [(ngModel)]="garantieForm.dateTraite" /></div>
+                      <div class="field"><label for="garantie-dateTraite">Date traite</label><input id="garantie-dateTraite" type="date" [(ngModel)]="garantieForm.dateTraite" /></div>
                       <div class="field">
-                        <label>Engagement remboursement signé</label>
-                        <select [(ngModel)]="garantieForm.engagementRemboursementSigne">
+                        <label for="garantie-engagement">Engagement remboursement signé</label>
+                        <select id="garantie-engagement" [(ngModel)]="garantieForm.engagementRemboursementSigne">
                           <option [ngValue]="true">Oui</option><option [ngValue]="false">Non</option>
                         </select>
                       </div>
-                      <div class="field"><label>Date engagement</label><input type="date" [(ngModel)]="garantieForm.dateEngagement" /></div>
+                      <div class="field"><label for="garantie-dateEngagement">Date engagement</label><input id="garantie-dateEngagement" type="date" [(ngModel)]="garantieForm.dateEngagement" /></div>
                       <div class="field">
-                        <label>Autorisation retenue salaire signée</label>
-                        <select [(ngModel)]="garantieForm.autorisationRetenueSalaireSignee">
+                        <label for="garantie-autorisationRetenue">Autorisation retenue salaire signée</label>
+                        <select id="garantie-autorisationRetenue" [(ngModel)]="garantieForm.autorisationRetenueSalaireSignee">
                           <option [ngValue]="true">Oui</option><option [ngValue]="false">Non</option>
                         </select>
                       </div>
-                      <div class="field"><label>Date autorisation retenue</label><input type="date" [(ngModel)]="garantieForm.dateAutorisationRetenue" /></div>
+                      <div class="field"><label for="garantie-dateAutorisationRetenue">Date autorisation retenue</label><input id="garantie-dateAutorisationRetenue" type="date" [(ngModel)]="garantieForm.dateAutorisationRetenue" /></div>
                     </div>
                     <button type="button" class="btn btn-validate" (click)="saveGarantie()">{{ garantie() ? 'Mettre à jour la garantie' : 'Créer la garantie' }}</button>
                   </div>
@@ -114,16 +114,16 @@
                         </table>
                       </div>
                       <div class="form-grid">
-                        <div class="field"><label>N°</label><input type="number" min="1" [(ngModel)]="newEcheance.numeroEcheance" /></div>
-                        <div class="field"><label>Date</label><input type="date" [(ngModel)]="newEcheance.date" /></div>
-                        <div class="field"><label>Capital restant dû</label><input type="number" min="0" step="0.01" [(ngModel)]="newEcheance.capitalRestantDu" /></div>
-                        <div class="field"><label>Mensualité</label><input type="number" min="0" step="0.01" [(ngModel)]="newEcheance.mensualite" /></div>
-                        <div class="field"><label>Capital amorti</label><input type="number" min="0" step="0.01" [(ngModel)]="newEcheance.capitalAmorti" /></div>
-                        <div class="field"><label>Frais de gestion</label><input type="number" min="0" step="0.01" [(ngModel)]="newEcheance.fraisGestion" /></div>
-                        <div class="field"><label>Solde restant</label><input type="number" min="0" step="0.01" [(ngModel)]="newEcheance.soldeRestant" /></div>
+                        <div class="field"><label for="echeance-numero">N°</label><input id="echeance-numero" type="number" min="1" [(ngModel)]="newEcheance.numeroEcheance" /></div>
+                        <div class="field"><label for="echeance-date">Date</label><input id="echeance-date" type="date" [(ngModel)]="newEcheance.date" /></div>
+                        <div class="field"><label for="echeance-capitalRestantDu">Capital restant dû</label><input id="echeance-capitalRestantDu" type="number" min="0" step="0.01" [(ngModel)]="newEcheance.capitalRestantDu" /></div>
+                        <div class="field"><label for="echeance-mensualite">Mensualité</label><input id="echeance-mensualite" type="number" min="0" step="0.01" [(ngModel)]="newEcheance.mensualite" /></div>
+                        <div class="field"><label for="echeance-capitalAmorti">Capital amorti</label><input id="echeance-capitalAmorti" type="number" min="0" step="0.01" [(ngModel)]="newEcheance.capitalAmorti" /></div>
+                        <div class="field"><label for="echeance-fraisGestion">Frais de gestion</label><input id="echeance-fraisGestion" type="number" min="0" step="0.01" [(ngModel)]="newEcheance.fraisGestion" /></div>
+                        <div class="field"><label for="echeance-soldeRestant">Solde restant</label><input id="echeance-soldeRestant" type="number" min="0" step="0.01" [(ngModel)]="newEcheance.soldeRestant" /></div>
                         <div class="field">
-                          <label>Statut</label>
-                          <select [(ngModel)]="newEcheance.statut">
+                          <label for="echeance-statut">Statut</label>
+                          <select id="echeance-statut" [(ngModel)]="newEcheance.statut">
                             @for (o of statutEcheanceOptions; track o.value) {
                               <option [ngValue]="o.value">{{ o.label }}</option>
                             }
@@ -153,20 +153,20 @@
                         </table>
                       </div>
                       <div class="form-grid">
-                        <div class="field"><label>Mois</label><input type="date" [(ngModel)]="newRetenue.mois" /></div>
+                        <div class="field"><label for="retenue-mois">Mois</label><input id="retenue-mois" type="date" [(ngModel)]="newRetenue.mois" /></div>
                         <div class="field">
-                          <label>Agent</label>
-                          <select [(ngModel)]="newRetenue.agentId">
+                          <label for="retenue-agent">Agent</label>
+                          <select id="retenue-agent" [(ngModel)]="newRetenue.agentId">
                             <option [ngValue]="0" disabled>Choisir</option>
                             @for (a of agents(); track a.id) {
                               <option [ngValue]="a.id">{{ a.prenom }} {{ a.nom }}</option>
                             }
                           </select>
                         </div>
-                        <div class="field"><label>Montant à retenir</label><input type="number" min="0" step="0.01" [(ngModel)]="newRetenue.montantARetenir" /></div>
+                        <div class="field"><label for="retenue-montant">Montant à retenir</label><input id="retenue-montant" type="number" min="0" step="0.01" [(ngModel)]="newRetenue.montantARetenir" /></div>
                         <div class="field">
-                          <label>Statut</label>
-                          <select [(ngModel)]="newRetenue.statut">
+                          <label for="retenue-statut">Statut</label>
+                          <select id="retenue-statut" [(ngModel)]="newRetenue.statut">
                             @for (o of statutRetenueOptions; track o.value) {
                               <option [ngValue]="o.value">{{ o.label }}</option>
                             }
@@ -195,25 +195,25 @@
         <h3>{{ budgetEditingId() ? 'Modifier le budget' : 'Nouveau budget' }}</h3>
         <div class="form-grid">
           <div class="field">
-            <label>Société</label>
-            <select [(ngModel)]="budgetForm.societeId">
+            <label for="budget-societe">Société</label>
+            <select id="budget-societe" [(ngModel)]="budgetForm.societeId">
               @for (s of societes(); track s.id) {
                 <option [ngValue]="s.id">{{ s.raisonSociale }}</option>
               }
             </select>
           </div>
-          <div class="field"><label>Exercice</label><input type="number" [(ngModel)]="budgetForm.exercice" /></div>
+          <div class="field"><label for="budget-exercice">Exercice</label><input id="budget-exercice" type="number" [(ngModel)]="budgetForm.exercice" /></div>
           <div class="field">
-            <label>Catégorie</label>
-            <select [(ngModel)]="budgetForm.categorie">
+            <label for="budget-categorie">Catégorie</label>
+            <select id="budget-categorie" [(ngModel)]="budgetForm.categorie">
               @for (o of categorieOptions; track o.value) {
                 <option [ngValue]="o.value">{{ o.label }}</option>
               }
             </select>
           </div>
-          <div class="field"><label>Ressources</label><input type="number" min="0" step="0.01" [(ngModel)]="budgetForm.ressources" /></div>
-          <div class="field"><label>Emplois</label><input type="number" min="0" step="0.01" [(ngModel)]="budgetForm.emplois" /></div>
-          <div class="field"><label>Solde</label><input type="number" step="0.01" [(ngModel)]="budgetForm.solde" /></div>
+          <div class="field"><label for="budget-ressources">Ressources</label><input id="budget-ressources" type="number" min="0" step="0.01" [(ngModel)]="budgetForm.ressources" /></div>
+          <div class="field"><label for="budget-emplois">Emplois</label><input id="budget-emplois" type="number" min="0" step="0.01" [(ngModel)]="budgetForm.emplois" /></div>
+          <div class="field"><label for="budget-solde">Solde</label><input id="budget-solde" type="number" step="0.01" [(ngModel)]="budgetForm.solde" /></div>
         </div>
         <div style="display:flex; gap: 8px;">
           <button type="button" class="btn btn-ghost" (click)="cancelBudget()">Annuler</button>

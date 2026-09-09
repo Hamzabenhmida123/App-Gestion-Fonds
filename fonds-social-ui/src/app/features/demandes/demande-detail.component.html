@@ -29,8 +29,8 @@
         }
         @if (availableTransitions().length) {
           <div class="field">
-            <label>Nouveau statut</label>
-            <select [(ngModel)]="transitionTarget">
+            <label for="transition-newStatut">Nouveau statut</label>
+            <select id="transition-newStatut" [(ngModel)]="transitionTarget">
               <option [ngValue]="null" disabled>Choisir</option>
               @for (s of availableTransitions(); track s) {
                 <option [ngValue]="s">{{ statutLabels[s] }}</option>
@@ -38,12 +38,12 @@
             </select>
           </div>
           <div class="field">
-            <label>Auteur</label>
-            <input [(ngModel)]="transitionAuteur" placeholder="Ex: RH" />
+            <label for="transition-auteur">Auteur</label>
+            <input id="transition-auteur" [(ngModel)]="transitionAuteur" placeholder="Ex: RH" />
           </div>
           <div class="field">
-            <label>Commentaire</label>
-            <input [(ngModel)]="transitionCommentaire" />
+            <label for="transition-commentaire">Commentaire</label>
+            <input id="transition-commentaire" [(ngModel)]="transitionCommentaire" />
           </div>
           <button type="button" class="btn btn-validate" (click)="submitTransition()">Appliquer la transition</button>
         } @else {
@@ -61,12 +61,12 @@
         }
         <div class="form-grid">
           <div class="field">
-            <label>Auteur</label>
-            <input [(ngModel)]="cloturerAuteur" placeholder="Ex: RH" />
+            <label for="cloturer-auteur">Auteur</label>
+            <input id="cloturer-auteur" [(ngModel)]="cloturerAuteur" placeholder="Ex: RH" />
           </div>
           <div class="field">
-            <label>Commentaire</label>
-            <input [(ngModel)]="cloturerCommentaire" />
+            <label for="cloturer-commentaire">Commentaire</label>
+            <input id="cloturer-commentaire" [(ngModel)]="cloturerCommentaire" />
           </div>
         </div>
         <button type="button" class="btn btn-validate" (click)="submitCloturerDepot()">Clôturer le dépôt</button>
@@ -107,12 +107,12 @@
       </div>
       <div style="display:flex; gap: 8px; align-items: flex-end; flex-wrap: wrap;">
         <div class="field" style="margin-bottom: 0; flex: 1; min-width: 200px;">
-          <label>Type de pièce</label>
-          <input [(ngModel)]="uploadTypePiece" placeholder="Ex: CIN" />
+          <label for="upload-typePiece">Type de pièce</label>
+          <input id="upload-typePiece" [(ngModel)]="uploadTypePiece" placeholder="Ex: CIN" />
         </div>
         <div class="field" style="margin-bottom: 0;">
-          <label>Fichier</label>
-          <input type="file" (change)="onFileSelected($event)" />
+          <label for="upload-fichier">Fichier</label>
+          <input id="upload-fichier" type="file" (change)="onFileSelected($event)" />
         </div>
         <button type="button" class="btn btn-primary" (click)="submitUpload()">Déposer</button>
       </div>
