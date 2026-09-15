@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SocieteService } from '../../core/services/societe.service';
 import { Societe } from '../../core/models/referentiel.model';
@@ -20,6 +20,11 @@ export class SocietesPageComponent implements OnInit {
   editingId = signal<number | null>(null);
   formError = signal<string | null>(null);
 
+  readonly pageSize = 20;
+  page = signal(1);
+  totalCount = signal(0);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
+
   form = this.fb.nonNullable.group({
     code: ['', Validators.required],
     raisonSociale: ['', Validators.required],
@@ -32,10 +37,26 @@ export class SocietesPageComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.service.getAll().subscribe({
-      next: list => { this.societes.set(list); this.loading.set(false); },
+    this.service.getAll({ page: this.page(), pageSize: this.pageSize }).subscribe({
+      next: result => {
+        this.societes.set(result.items);
+        this.totalCount.set(result.totalCount);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
+  }
+
+  previousPage(): void {
+    if (this.page() <= 1) return;
+    this.page.update(p => p - 1);
+    this.load();
+  }
+
+  nextPage(): void {
+    if (this.page() >= this.totalPages()) return;
+    this.page.update(p => p + 1);
+    this.load();
   }
 
   startCreate(): void {

@@ -6,7 +6,8 @@ namespace FondsSocial.Application.Services
 {
     public interface IDecisionService
     {
-        Task<IEnumerable<DecisionDto>> GetAllAsync();
+        /// <summary>Liste paginée côté SQL, filtrable par séance de comité.</summary>
+        Task<PagedResult<DecisionDto>> GetAllAsync(int? seanceComiteId = null, int page = 1, int pageSize = 20);
         Task<DecisionDto?> GetByIdAsync(int id);
 
         /// <summary>

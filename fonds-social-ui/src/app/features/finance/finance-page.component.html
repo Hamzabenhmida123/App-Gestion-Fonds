@@ -185,6 +185,16 @@
         </tbody>
       </table>
     </div>
+
+    <div class="page-header" style="margin-top: var(--spacing-4); margin-bottom: 0;">
+      <span class="muted">
+        {{ contratsTotalCount() }} contrat(s) · page {{ contratsPage() }} / {{ contratsTotalPages() }}
+      </span>
+      <div style="display:flex; gap: 8px;">
+        <button type="button" class="btn btn-ghost" [disabled]="contratsPage() <= 1" (click)="previousContratsPage()">&laquo; Précédent</button>
+        <button type="button" class="btn btn-ghost" [disabled]="contratsPage() >= contratsTotalPages()" (click)="nextContratsPage()">Suivant &raquo;</button>
+      </div>
+    </div>
   }
 
   @if (tab() === 'budgets') {
@@ -244,6 +254,16 @@
           }
         </tbody>
       </table>
+    </div>
+
+    <div class="page-header" style="margin-top: var(--spacing-4); margin-bottom: 0;">
+      <span class="muted">
+        {{ budgetsTotalCount() }} budget(s) · page {{ budgetsPage() }} / {{ budgetsTotalPages() }}
+      </span>
+      <div style="display:flex; gap: 8px;">
+        <button type="button" class="btn btn-ghost" [disabled]="budgetsPage() <= 1" (click)="previousBudgetsPage()">&laquo; Précédent</button>
+        <button type="button" class="btn btn-ghost" [disabled]="budgetsPage() >= budgetsTotalPages()" (click)="nextBudgetsPage()">Suivant &raquo;</button>
+      </div>
     </div>
   }
 </div>

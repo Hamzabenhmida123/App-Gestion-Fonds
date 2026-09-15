@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -18,10 +19,24 @@ namespace FondsSocial.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ParticipationSeanceDto>> GetAllAsync()
+        public async Task<PagedResult<ParticipationSeanceDto>> GetAllAsync(int? seanceComiteId = null, int page = 1, int pageSize = 20)
         {
-            var list = await _uow.ParticipationSeances.GetAllAsync();
-            return _mapper.Map<IEnumerable<ParticipationSeanceDto>>(list);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            System.Linq.Expressions.Expression<Func<ParticipationSeance, bool>>? filter = seanceComiteId.HasValue
+                ? p => p.SeanceComiteId == seanceComiteId.Value
+                : null;
+
+            var (items, totalCount) = await _uow.ParticipationSeances.GetPagedAsync(page, pageSize, filter);
+            return new PagedResult<ParticipationSeanceDto>
+            {
+                Items = _mapper.Map<IEnumerable<ParticipationSeanceDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<ParticipationSeanceDto?> GetByIdAsync(int id)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -18,10 +19,24 @@ namespace FondsSocial.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<RetenueMensuelleDto>> GetAllAsync()
+        public async Task<PagedResult<RetenueMensuelleDto>> GetAllAsync(int? contratId = null, int page = 1, int pageSize = 20)
         {
-            var list = await _uow.RetenuesMensuelles.GetAllAsync();
-            return _mapper.Map<IEnumerable<RetenueMensuelleDto>>(list);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            System.Linq.Expressions.Expression<Func<RetenueMensuelle, bool>>? filter = contratId.HasValue
+                ? r => r.ContratId == contratId.Value
+                : null;
+
+            var (items, totalCount) = await _uow.RetenuesMensuelles.GetPagedAsync(page, pageSize, filter);
+            return new PagedResult<RetenueMensuelleDto>
+            {
+                Items = _mapper.Map<IEnumerable<RetenueMensuelleDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<RetenueMensuelleDto?> GetByIdAsync(int id)

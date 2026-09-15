@@ -22,10 +22,20 @@ namespace FondsSocial.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var list = await _uow.SeanceComites.GetAllAsync();
-            return Ok(_mapper.Map<IEnumerable<SeanceComiteDto>>(list));
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            var (items, totalCount) = await _uow.SeanceComites.GetPagedAsync(page, pageSize);
+            return Ok(new PagedResult<SeanceComiteDto>
+            {
+                Items = _mapper.Map<IEnumerable<SeanceComiteDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            });
         }
 
         [HttpGet("{id}")]

@@ -33,7 +33,9 @@ export class HomePageComponent implements OnInit {
         this.demandesCount.set(result.totalCount);
         this.enCoursCount.set(result.items.filter(d => ![8, 9, 10, 11].includes(d.statutCourant)).length);
       });
-    this.agentService.getAll().pipe(catchError(() => of([]))).subscribe(list => this.agentsCount.set(list.length));
-    this.societeService.getAll().pipe(catchError(() => of([]))).subscribe(list => this.societesCount.set(list.length));
+    this.agentService.getAll({ pageSize: 1 }).pipe(catchError(() => of({ items: [], totalCount: 0, page: 1, pageSize: 1 })))
+      .subscribe(result => this.agentsCount.set(result.totalCount));
+    this.societeService.getAll({ pageSize: 1 }).pipe(catchError(() => of({ items: [], totalCount: 0, page: 1, pageSize: 1 })))
+      .subscribe(result => this.societesCount.set(result.totalCount));
   }
 }

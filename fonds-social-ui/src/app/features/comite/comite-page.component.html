@@ -52,6 +52,16 @@
         </tbody>
       </table>
     </div>
+
+    <div class="page-header" style="margin-top: var(--spacing-4); margin-bottom: 0;">
+      <span class="muted">
+        {{ membresTotalCount() }} membre(s) · page {{ membresPage() }} / {{ membresTotalPages() }}
+      </span>
+      <div style="display:flex; gap: 8px;">
+        <button type="button" class="btn btn-ghost" [disabled]="membresPage() <= 1" (click)="previousMembresPage()">&laquo; Précédent</button>
+        <button type="button" class="btn btn-ghost" [disabled]="membresPage() >= membresTotalPages()" (click)="nextMembresPage()">Suivant &raquo;</button>
+      </div>
+    </div>
   }
 
   @if (tab() === 'seances') {
@@ -188,6 +198,16 @@
           }
         </tbody>
       </table>
+    </div>
+
+    <div class="page-header" style="margin-top: var(--spacing-4); margin-bottom: 0;">
+      <span class="muted">
+        {{ seancesTotalCount() }} séance(s) · page {{ seancesPage() }} / {{ seancesTotalPages() }}
+      </span>
+      <div style="display:flex; gap: 8px;">
+        <button type="button" class="btn btn-ghost" [disabled]="seancesPage() <= 1" (click)="previousSeancesPage()">&laquo; Précédent</button>
+        <button type="button" class="btn btn-ghost" [disabled]="seancesPage() >= seancesTotalPages()" (click)="nextSeancesPage()">Suivant &raquo;</button>
+      </div>
     </div>
   }
 </div>

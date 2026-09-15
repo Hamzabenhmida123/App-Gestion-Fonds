@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { AgentService } from '../../core/services/agent.service';
@@ -24,6 +24,11 @@ export class AgentsPageComponent implements OnInit {
   loading = signal(false);
   editingId = signal<number | null>(null);
   formError = signal<string | null>(null);
+
+  readonly pageSize = 20;
+  page = signal(1);
+  totalCount = signal(0);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
   situationFamilialeOptions = enumOptions(SITUATION_FAMILIALE_LABELS);
 
@@ -53,16 +58,34 @@ export class AgentsPageComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.societeService.getAll().subscribe(list => this.societes.set(list));
+    // pageSize au maximum autorisé: ce sélecteur doit couvrir l'ensemble des sociétés
+    // disponibles pour le formulaire, pas seulement la première page de la liste paginée.
+    this.societeService.getAll({ pageSize: 100 }).subscribe(result => this.societes.set(result.items));
     this.load();
   }
 
   load(): void {
     this.loading.set(true);
-    this.service.getAll().subscribe({
-      next: list => { this.agents.set(list); this.loading.set(false); },
+    this.service.getAll({ page: this.page(), pageSize: this.pageSize }).subscribe({
+      next: result => {
+        this.agents.set(result.items);
+        this.totalCount.set(result.totalCount);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
+  }
+
+  previousPage(): void {
+    if (this.page() <= 1) return;
+    this.page.update(p => p - 1);
+    this.load();
+  }
+
+  nextPage(): void {
+    if (this.page() >= this.totalPages()) return;
+    this.page.update(p => p + 1);
+    this.load();
   }
 
   startCreate(): void {

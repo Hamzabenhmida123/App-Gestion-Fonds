@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { MembreComiteService } from '../../core/services/membre-comite.service';
@@ -33,8 +33,18 @@ export class ComitePageComponent implements OnInit {
   membreEditingId = signal<number | null>(null);
   membreForm = { nom: '', prenom: '', fonction: '', actif: true };
 
+  readonly membresPageSize = 20;
+  membresPage = signal(1);
+  membresTotalCount = signal(0);
+  membresTotalPages = computed(() => Math.max(1, Math.ceil(this.membresTotalCount() / this.membresPageSize)));
+
   seances = signal<SeanceComite[]>([]);
   seanceEditingId = signal<number | null>(null);
+
+  readonly seancesPageSize = 20;
+  seancesPage = signal(1);
+  seancesTotalCount = signal(0);
+  seancesTotalPages = computed(() => Math.max(1, Math.ceil(this.seancesTotalCount() / this.seancesPageSize)));
   seanceForm: { date: string; procesVerbal: string; statutVisaSignature: StatutVisaSignature } = {
     date: '', procesVerbal: '', statutVisaSignature: StatutVisaSignature.EnPreparation
   };
@@ -72,7 +82,22 @@ export class ComitePageComponent implements OnInit {
   }
 
   loadMembres(): void {
-    this.membreService.getAll().subscribe(list => this.membres.set(list));
+    this.membreService.getAll({ page: this.membresPage(), pageSize: this.membresPageSize }).subscribe(result => {
+      this.membres.set(result.items);
+      this.membresTotalCount.set(result.totalCount);
+    });
+  }
+
+  previousMembresPage(): void {
+    if (this.membresPage() <= 1) return;
+    this.membresPage.update(p => p - 1);
+    this.loadMembres();
+  }
+
+  nextMembresPage(): void {
+    if (this.membresPage() >= this.membresTotalPages()) return;
+    this.membresPage.update(p => p + 1);
+    this.loadMembres();
   }
 
   startCreateMembre(): void {
@@ -110,7 +135,22 @@ export class ComitePageComponent implements OnInit {
   }
 
   loadSeances(): void {
-    this.seanceService.getAll().subscribe(list => this.seances.set(list));
+    this.seanceService.getAll({ page: this.seancesPage(), pageSize: this.seancesPageSize }).subscribe(result => {
+      this.seances.set(result.items);
+      this.seancesTotalCount.set(result.totalCount);
+    });
+  }
+
+  previousSeancesPage(): void {
+    if (this.seancesPage() <= 1) return;
+    this.seancesPage.update(p => p - 1);
+    this.loadSeances();
+  }
+
+  nextSeancesPage(): void {
+    if (this.seancesPage() >= this.seancesTotalPages()) return;
+    this.seancesPage.update(p => p + 1);
+    this.loadSeances();
   }
 
   startCreateSeance(): void {
@@ -166,14 +206,14 @@ export class ComitePageComponent implements OnInit {
   }
 
   private loadParticipations(seanceId: number): void {
-    this.participationService.getAll().subscribe(list => {
-      this.participations.set(list.filter(p => p.seanceComiteId === seanceId));
+    this.participationService.getAll({ seanceComiteId: seanceId, pageSize: 100 }).subscribe(result => {
+      this.participations.set(result.items);
     });
   }
 
   private loadDecisions(seanceId: number): void {
-    this.decisionService.getAll().subscribe(list => {
-      this.decisions.set(list.filter(d => d.seanceComiteId === seanceId));
+    this.decisionService.getAll({ seanceComiteId: seanceId, pageSize: 100 }).subscribe(result => {
+      this.decisions.set(result.items);
     });
   }
 

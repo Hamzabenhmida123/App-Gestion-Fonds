@@ -35,10 +35,20 @@ namespace FondsSocial.Application.Services
             return true;
         }
 
-        public async Task<IEnumerable<TypeDePretDto>> GetAllAsync()
+        public async Task<PagedResult<TypeDePretDto>> GetAllAsync(int page = 1, int pageSize = 20)
         {
-            var list = await _uow.TypeDePrets.GetAllAsync();
-            return _mapper.Map<IEnumerable<TypeDePretDto>>(list);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            var (items, totalCount) = await _uow.TypeDePrets.GetPagedAsync(page, pageSize);
+            return new PagedResult<TypeDePretDto>
+            {
+                Items = _mapper.Map<IEnumerable<TypeDePretDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<TypeDePretDto?> GetByIdAsync(int id)

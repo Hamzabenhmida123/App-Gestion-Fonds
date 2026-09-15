@@ -6,7 +6,8 @@ namespace FondsSocial.Application.Services
 {
     public interface IContratService
     {
-        Task<IEnumerable<ContratDto>> GetAllAsync();
+        /// <summary>Liste paginée côté SQL (WHERE + Skip/Take exécutés par la base).</summary>
+        Task<PagedResult<ContratDto>> GetAllAsync(int page = 1, int pageSize = 20);
         Task<ContratDto?> GetByIdAsync(int id);
 
         /// <summary>

@@ -150,4 +150,14 @@
       </tbody>
     </table>
   </div>
+
+  <div class="page-header" style="margin-top: var(--spacing-4); margin-bottom: 0;">
+    <span class="muted">
+      {{ totalCount() }} type(s) de prêt · page {{ page() }} / {{ totalPages() }}
+    </span>
+    <div style="display:flex; gap: 8px;">
+      <button type="button" class="btn btn-ghost" [disabled]="page() <= 1" (click)="previousPage()">&laquo; Précédent</button>
+      <button type="button" class="btn btn-ghost" [disabled]="page() >= totalPages()" (click)="nextPage()">Suivant &raquo;</button>
+    </div>
+  </div>
 </div>

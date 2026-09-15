@@ -40,8 +40,10 @@ export class DemandeListComponent implements OnInit {
   filterTo = '';
 
   ngOnInit(): void {
-    this.agentService.getAll().subscribe(list => this.agents.set(list));
-    this.typeService.getAll().subscribe(list => this.types.set(list));
+    // pageSize au maximum autorisé: ces sélecteurs de filtre doivent couvrir l'ensemble des
+    // agents/types disponibles, pas seulement la première page de la liste paginée.
+    this.agentService.getAll({ pageSize: 100 }).subscribe(result => this.agents.set(result.items));
+    this.typeService.getAll({ pageSize: 100 }).subscribe(result => this.types.set(result.items));
     this.load();
   }
 

@@ -22,10 +22,24 @@ namespace FondsSocial.Application.Services
             _demandeService = demandeService;
         }
 
-        public async Task<IEnumerable<DecisionDto>> GetAllAsync()
+        public async Task<PagedResult<DecisionDto>> GetAllAsync(int? seanceComiteId = null, int page = 1, int pageSize = 20)
         {
-            var list = await _uow.Decisions.GetAllAsync();
-            return _mapper.Map<IEnumerable<DecisionDto>>(list);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            System.Linq.Expressions.Expression<Func<Decision, bool>>? filter = seanceComiteId.HasValue
+                ? d => d.SeanceComiteId == seanceComiteId.Value
+                : null;
+
+            var (items, totalCount) = await _uow.Decisions.GetPagedAsync(page, pageSize, filter);
+            return new PagedResult<DecisionDto>
+            {
+                Items = _mapper.Map<IEnumerable<DecisionDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<DecisionDto?> GetByIdAsync(int id)

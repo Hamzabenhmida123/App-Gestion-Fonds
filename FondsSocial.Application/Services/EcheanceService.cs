@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using FondsSocial.Application.DTOs;
@@ -18,10 +20,25 @@ namespace FondsSocial.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<EcheanceDto>> GetAllAsync()
+        public async Task<PagedResult<EcheanceDto>> GetAllAsync(int? contratId = null, int page = 1, int pageSize = 20)
         {
-            var list = await _uow.Echeances.GetAllAsync();
-            return _mapper.Map<IEnumerable<EcheanceDto>>(list);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            System.Linq.Expressions.Expression<Func<Echeance, bool>>? filter = contratId.HasValue
+                ? e => e.ContratId == contratId.Value
+                : null;
+
+            var (items, totalCount) = await _uow.Echeances.GetPagedAsync(
+                page, pageSize, filter, q => q.OrderBy(e => e.NumeroEcheance));
+            return new PagedResult<EcheanceDto>
+            {
+                Items = _mapper.Map<IEnumerable<EcheanceDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<EcheanceDto?> GetByIdAsync(int id)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -25,10 +26,24 @@ namespace FondsSocial.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int? typeDePretId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            var list = await _uow.PieceJustificativeRequises.GetAllAsync();
-            return Ok(_mapper.Map<IEnumerable<PieceJustificativeRequiseDto>>(list));
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            System.Linq.Expressions.Expression<Func<PieceJustificativeRequise, bool>>? filter = typeDePretId.HasValue
+                ? p => p.TypeDePretId == typeDePretId.Value
+                : null;
+
+            var (items, totalCount) = await _uow.PieceJustificativeRequises.GetPagedAsync(page, pageSize, filter);
+            return Ok(new PagedResult<PieceJustificativeRequiseDto>
+            {
+                Items = _mapper.Map<IEnumerable<PieceJustificativeRequiseDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            });
         }
 
         [HttpGet("{id}")]

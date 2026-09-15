@@ -20,10 +20,20 @@ namespace FondsSocial.Application.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<ContratDto>> GetAllAsync()
+        public async Task<PagedResult<ContratDto>> GetAllAsync(int page = 1, int pageSize = 20)
         {
-            var list = await _uow.Contrats.GetAllAsync();
-            return _mapper.Map<IEnumerable<ContratDto>>(list);
+            if (page < 1) page = 1;
+            if (pageSize < 1) pageSize = 20;
+            if (pageSize > 100) pageSize = 100;
+
+            var (items, totalCount) = await _uow.Contrats.GetPagedAsync(page, pageSize);
+            return new PagedResult<ContratDto>
+            {
+                Items = _mapper.Map<IEnumerable<ContratDto>>(items),
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
         }
 
         public async Task<ContratDto?> GetByIdAsync(int id)

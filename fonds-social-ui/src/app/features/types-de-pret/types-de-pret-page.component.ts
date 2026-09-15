@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TypeDePretService } from '../../core/services/type-de-pret.service';
 import { PieceJustificativeRequiseService } from '../../core/services/piece-justificative-requise.service';
@@ -22,6 +22,11 @@ export class TypesDePretPageComponent implements OnInit {
   loading = signal(false);
   editingId = signal<number | null>(null);
   formError = signal<string | null>(null);
+
+  readonly pageSize = 20;
+  page = signal(1);
+  totalCount = signal(0);
+  totalPages = computed(() => Math.max(1, Math.ceil(this.totalCount() / this.pageSize)));
 
   expandedTypeId = signal<number | null>(null);
   pieces = signal<PieceJustificativeRequise[]>([]);
@@ -49,10 +54,26 @@ export class TypesDePretPageComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.service.getAll().subscribe({
-      next: list => { this.types.set(list); this.loading.set(false); },
+    this.service.getAll({ page: this.page(), pageSize: this.pageSize }).subscribe({
+      next: result => {
+        this.types.set(result.items);
+        this.totalCount.set(result.totalCount);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
+  }
+
+  previousPage(): void {
+    if (this.page() <= 1) return;
+    this.page.update(p => p - 1);
+    this.load();
+  }
+
+  nextPage(): void {
+    if (this.page() >= this.totalPages()) return;
+    this.page.update(p => p + 1);
+    this.load();
   }
 
   categorieLabel(c: number): string {
@@ -125,8 +146,8 @@ export class TypesDePretPageComponent implements OnInit {
   }
 
   private loadPieces(typeDePretId: number): void {
-    this.pieceService.getAll().subscribe(list => {
-      this.pieces.set(list.filter(p => p.typeDePretId === typeDePretId));
+    this.pieceService.getAll({ typeDePretId, pageSize: 100 }).subscribe(result => {
+      this.pieces.set(result.items);
     });
   }
 

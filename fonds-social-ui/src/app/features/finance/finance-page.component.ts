@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { SlicePipe } from '@angular/common';
 import { ContratService } from '../../core/services/contrat.service';
@@ -43,6 +43,16 @@ export class FinancePageComponent implements OnInit {
   agents = signal<Agent[]>([]);
   societes = signal<Societe[]>([]);
 
+  readonly contratsPageSize = 20;
+  contratsPage = signal(1);
+  contratsTotalCount = signal(0);
+  contratsTotalPages = computed(() => Math.max(1, Math.ceil(this.contratsTotalCount() / this.contratsPageSize)));
+
+  readonly budgetsPageSize = 20;
+  budgetsPage = signal(1);
+  budgetsTotalCount = signal(0);
+  budgetsTotalPages = computed(() => Math.max(1, Math.ceil(this.budgetsTotalCount() / this.budgetsPageSize)));
+
   contratEditingId = signal<number | null>(null);
   contratForm = {
     decisionId: 0, dateSignature: '', montantPrincipal: 0, fraisGestion: 0,
@@ -83,9 +93,11 @@ export class FinancePageComponent implements OnInit {
   ngOnInit(): void {
     this.loadContrats();
     this.loadBudgets();
-    this.decisionService.getAll().subscribe(list => this.decisions.set(list));
-    this.agentService.getAll().subscribe(list => this.agents.set(list));
-    this.societeService.getAll().subscribe(list => this.societes.set(list));
+    // pageSize au maximum autorisé: ces sélecteurs/lookups doivent couvrir l'ensemble des
+    // décisions/agents/sociétés disponibles, pas seulement la première page.
+    this.decisionService.getAll({ pageSize: 100 }).subscribe(result => this.decisions.set(result.items));
+    this.agentService.getAll({ pageSize: 100 }).subscribe(result => this.agents.set(result.items));
+    this.societeService.getAll({ pageSize: 100 }).subscribe(result => this.societes.set(result.items));
   }
 
   agentName(id: number): string {
@@ -103,7 +115,22 @@ export class FinancePageComponent implements OnInit {
   }
 
   loadContrats(): void {
-    this.contratService.getAll().subscribe(list => this.contrats.set(list));
+    this.contratService.getAll({ page: this.contratsPage(), pageSize: this.contratsPageSize }).subscribe(result => {
+      this.contrats.set(result.items);
+      this.contratsTotalCount.set(result.totalCount);
+    });
+  }
+
+  previousContratsPage(): void {
+    if (this.contratsPage() <= 1) return;
+    this.contratsPage.update(p => p - 1);
+    this.loadContrats();
+  }
+
+  nextContratsPage(): void {
+    if (this.contratsPage() >= this.contratsTotalPages()) return;
+    this.contratsPage.update(p => p + 1);
+    this.loadContrats();
   }
 
   startCreateContrat(): void {
@@ -164,8 +191,8 @@ export class FinancePageComponent implements OnInit {
   }
 
   private loadGarantie(contratId: number): void {
-    this.garantieService.getAll().subscribe(list => {
-      const g = list.find(x => x.contratId === contratId) ?? null;
+    this.garantieService.getAll({ contratId, pageSize: 1 }).subscribe(result => {
+      const g = result.items[0] ?? null;
       this.garantie.set(g);
       this.garantieForm = g ? {
         assuranceVieSouscrite: g.assuranceVieSouscrite,
@@ -212,8 +239,8 @@ export class FinancePageComponent implements OnInit {
   }
 
   private loadEcheances(contratId: number): void {
-    this.echeanceService.getAll().subscribe(list => {
-      this.echeances.set(list.filter(e => e.contratId === contratId).sort((a, b) => a.numeroEcheance - b.numeroEcheance));
+    this.echeanceService.getAll({ contratId, pageSize: 100 }).subscribe(result => {
+      this.echeances.set(result.items);
     });
   }
 
@@ -231,8 +258,8 @@ export class FinancePageComponent implements OnInit {
   }
 
   private loadRetenues(contratId: number): void {
-    this.retenueService.getAll().subscribe(list => {
-      this.retenues.set(list.filter(r => r.contratId === contratId));
+    this.retenueService.getAll({ contratId, pageSize: 100 }).subscribe(result => {
+      this.retenues.set(result.items);
     });
   }
 
@@ -252,7 +279,22 @@ export class FinancePageComponent implements OnInit {
   }
 
   loadBudgets(): void {
-    this.budgetService.getAll().subscribe(list => this.budgets.set(list));
+    this.budgetService.getAll({ page: this.budgetsPage(), pageSize: this.budgetsPageSize }).subscribe(result => {
+      this.budgets.set(result.items);
+      this.budgetsTotalCount.set(result.totalCount);
+    });
+  }
+
+  previousBudgetsPage(): void {
+    if (this.budgetsPage() <= 1) return;
+    this.budgetsPage.update(p => p - 1);
+    this.loadBudgets();
+  }
+
+  nextBudgetsPage(): void {
+    if (this.budgetsPage() >= this.budgetsTotalPages()) return;
+    this.budgetsPage.update(p => p + 1);
+    this.loadBudgets();
   }
 
   startCreateBudget(): void {

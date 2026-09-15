@@ -21,8 +21,8 @@ describe('DemandeListComponent', () => {
 
     fixture.detectChanges(); // triggers ngOnInit: Agent, TypeDePret and Demande requests
 
-    httpMock.expectOne(`${API_BASE_URL}/Agent`).flush([]);
-    httpMock.expectOne(`${API_BASE_URL}/TypeDePret`).flush([]);
+    httpMock.expectOne(r => r.url === `${API_BASE_URL}/Agent`).flush({ items: [], totalCount: 0, page: 1, pageSize: 100 });
+    httpMock.expectOne(r => r.url === `${API_BASE_URL}/TypeDePret`).flush({ items: [], totalCount: 0, page: 1, pageSize: 100 });
     httpMock.expectOne(r => r.url === `${API_BASE_URL}/Demande`)
       .flush({ items: [], totalCount: 45, page: 1, pageSize: 20 });
   });

@@ -17,9 +17,9 @@ namespace FondsSocial.API.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int? contratId, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
         {
-            return Ok(await _service.GetAllAsync());
+            return Ok(await _service.GetAllAsync(contratId, page, pageSize));
         }
 
         [HttpGet("{id}")]

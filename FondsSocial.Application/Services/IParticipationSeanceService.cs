@@ -6,7 +6,8 @@ namespace FondsSocial.Application.Services
 {
     public interface IParticipationSeanceService
     {
-        Task<IEnumerable<ParticipationSeanceDto>> GetAllAsync();
+        /// <summary>Liste paginée côté SQL, filtrable par séance de comité.</summary>
+        Task<PagedResult<ParticipationSeanceDto>> GetAllAsync(int? seanceComiteId = null, int page = 1, int pageSize = 20);
         Task<ParticipationSeanceDto?> GetByIdAsync(int id);
 
         /// <summary>Vérifie que la séance et le membre existent avant d'enregistrer la participation.</summary>
